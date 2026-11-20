@@ -1,323 +1,1979 @@
 <!DOCTYPE html>
-<html lang="zh-HK" data-theme="light">
+<html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HSI 財務分析 Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#16213e">
+<title>六合彩 Mark Six 聰明抽珠系統</title>
 <style>
-:root,[data-theme="light"]{
-  --bg:#f7f6f2;--surface:#ffffff;--surface-2:#f3f0ec;
-  --border:rgba(0,0,0,0.08);--text:#1a1a1a;--text-muted:#6b7280;
-  --primary:#01696f;--primary-hover:#0c4e54;--primary-bg:#e6f4f4;
-  --success:#437a22;--success-bg:#edf7e8;
-  --danger:#dc2626;--danger-bg:#fef2f2;
-  --warn:#d97706;--warn-bg:#fffbeb;
-  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 12px rgba(0,0,0,0.04);
-}
-[data-theme="dark"]{
-  --bg:#111211;--surface:#1c1c1e;--surface-2:#2c2c2e;
-  --border:rgba(255,255,255,0.08);--text:#e5e5e7;--text-muted:#8e8e93;
-  --primary:#4f98a3;--primary-hover:#6db5bf;--primary-bg:#1a3535;
-  --success:#6daa45;--success-bg:#1e3318;
-  --danger:#f87171;--danger-bg:#3b1212;
-  --warn:#fbbf24;--warn-bg:#3b2a0a;
-  --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 12px rgba(0,0,0,0.2);
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:15px;scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
-.logo{display:flex;align-items:center;gap:0.6rem;font-weight:700;font-size:1rem;color:var(--text)}
-.logo svg{color:var(--primary)}
-.header-right{display:flex;align-items:center;gap:1rem}
-.theme-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.7rem;cursor:pointer;color:var(--text-muted);font-size:0.8rem;display:flex;align-items:center;gap:0.3rem}
-.theme-btn:hover{border-color:var(--primary);color:var(--primary)}
-.container{max-width:1400px;margin:0 auto;padding:1.5rem;width:100%}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem}
-.kpi-label{font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.4rem}
-.kpi-value{font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
-.controls{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center}
-.search-wrap{position:relative;flex:1;min-width:200px}
-.search-wrap input{width:100%;padding:0.5rem 0.75rem 0.5rem 2.2rem;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-size:0.875rem;outline:none}
-.search-wrap input:focus{border-color:var(--primary)}
-.search-icon{position:absolute;left:0.65rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none}
-.filter-btns{display:flex;gap:0.4rem;flex-wrap:wrap}
-.filter-btn{padding:0.4rem 0.85rem;border:1px solid var(--border);border-radius:20px;background:none;color:var(--text-muted);font-size:0.8rem;cursor:pointer;white-space:nowrap}
-.filter-btn:hover,.filter-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
-.sort-select{padding:0.45rem 0.75rem;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-size:0.85rem;outline:none;cursor:pointer}
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
-.table-header{padding:0.85rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.table-header h2{font-size:0.9rem;font-weight:600}
-.count-badge{background:var(--primary-bg);color:var(--primary);font-size:0.75rem;padding:0.2rem 0.6rem;border-radius:20px;font-weight:600}
-.table-scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:0.8rem}
-thead th{background:var(--surface-2);padding:0.65rem 0.85rem;text-align:left;font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);white-space:nowrap;cursor:pointer;border-bottom:1px solid var(--border)}
-thead th:hover{color:var(--primary)}
-tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--primary-bg)}
-tbody td{padding:0.6rem 0.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
-.symbol-cell{font-weight:700;color:var(--primary);font-size:0.85rem}
-.name-cell{color:var(--text-muted);font-size:0.78rem;max-width:120px;overflow:hidden;text-overflow:ellipsis}
-.badge{display:inline-block;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:600}
-.badge-pos{background:var(--success-bg);color:var(--success)}
-.badge-neg{background:var(--danger-bg);color:var(--danger)}
-.badge-mid{background:var(--warn-bg);color:var(--warn)}
-.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.2s}
-.drawer-overlay.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;right:0;top:0;bottom:0;width:min(560px,100vw);background:var(--surface);z-index:201;transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;box-shadow:-8px 0 32px rgba(0,0,0,0.15)}
-.drawer.open{transform:translateX(0)}
-.drawer-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0;background:var(--surface);z-index:1}
-.drawer-title{font-size:1.1rem;font-weight:700}
-.drawer-sub{font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem}
-.close-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0.25rem;border-radius:6px;font-size:1.2rem;line-height:1}
-.close-btn:hover{color:var(--text);background:var(--surface-2)}
-.drawer-body{padding:1.25rem 1.5rem}
-.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.5rem}
-.metric-card{background:var(--surface-2);border-radius:8px;padding:0.85rem 1rem}
-.metric-label{font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.03em}
-.metric-value{font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums}
-.chart-section{margin-bottom:1.5rem}
-.chart-section h3{font-size:0.85rem;font-weight:600;margin-bottom:0.75rem;color:var(--text-muted)}
-.chart-canvas{background:var(--surface-2);border-radius:8px;padding:0.75rem}
-.loading{text-align:center;padding:4rem;color:var(--text-muted)}
-.spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite;margin-bottom:0.75rem}
-@keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:3rem;color:var(--text-muted)}
-footer{text-align:center;padding:1rem;font-size:0.75rem;color:var(--text-muted);border-top:1px solid var(--border);margin-top:auto}
-@media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.metrics-grid{grid-template-columns:1fr}.controls{flex-direction:column;align-items:stretch}}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background-attachment: fixed;
+    color: #fff; min-height: 100vh;
+    padding: calc(16px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  header { text-align: center; padding: 10px 0 18px; }
+  h1 {
+    font-size: 2em;
+    background: linear-gradient(90deg, #ffd700, #ff6b35, #ffd700);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 6px; letter-spacing: 2px;
+  }
+  .subtitle { color: #b8c5d6; font-size: 0.9em; line-height: 1.5; }
+
+  /* 分頁 */
+  .tabs { display: flex; gap: 6px; position: sticky; top: 0; z-index: 10; padding: 8px 0;
+    background: rgba(22,33,62,0.92); backdrop-filter: blur(8px); margin-bottom: 14px; }
+  .tab { flex: 1; padding: 12px 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06); color: #b8c5d6; font-size: 1em; font-weight: bold; cursor: pointer; }
+  .tab.active { background: linear-gradient(135deg, #ff6b35, #f7931e); color: #fff; border-color: transparent; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .panel {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .panel h2 { font-size: 1.15em; margin-bottom: 12px; color: #ffd700; display: flex; align-items: center; gap: 8px; }
+  .panel h2::before { content: ""; width: 4px; height: 20px; background: #ffd700; border-radius: 2px; }
+  .hint { color: #8fa0b5; font-size: 0.85em; line-height: 1.6; margin-bottom: 10px; }
+
+  .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .control-group label { font-size: 0.9em; color: #b8c5d6; font-weight: 500; }
+  select, input[type=number], input[type=text], textarea {
+    padding: 11px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.3); color: #fff; font-size: 16px; outline: none; width: 100%; font-family: inherit;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  select:focus, input:focus, textarea:focus { border-color: #ffd700; box-shadow: 0 0 0 3px rgba(255,215,0,0.15); }
+  select option { background: #16213e; }
+
+  .mode-switch { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .mode-btn { flex: 1; min-width: 140px; padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.2); color: #b8c5d6; font-weight: bold; font-size: 1em; cursor: pointer; }
+  .mode-btn.active { border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,0.08); }
+
+  .banker-section { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px;
+    margin-top: 6px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; }
+  .banker-btn { aspect-ratio: 1; width: 100%; max-width: 44px; justify-self: center; border-radius: 50%;
+    border: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 0.9em; color: #fff;
+    display: flex; align-items: center; justify-content: center; }
+  .banker-btn.selected { border-color: #ffd700; transform: scale(1.12); box-shadow: 0 0 12px rgba(255,215,0,0.7); }
+
+  .btn-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 18px 0; }
+  .btn { padding: 13px 22px; border: none; border-radius: 30px; font-size: 1em; font-weight: bold; cursor: pointer; letter-spacing: 1px; }
+  .btn-primary { background: linear-gradient(135deg, #ff6b35, #f7931e); color: #fff; box-shadow: 0 4px 15px rgba(255,107,53,0.4); }
+  .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+  .btn-small { padding: 8px 14px; font-size: 0.85em; }
+  .btn:active { transform: translateY(1px); }
+
+  .result-ticket { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .result-ticket.win { border-color: rgba(255,215,0,0.6); background: rgba(255,215,0,0.07); }
+  .ticket-num { min-width: 64px; color: #ffd700; font-weight: bold; font-size: 0.95em; }
+  .balls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .ball { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    font-weight: bold; color: #fff; font-size: 0.95em; position: relative; flex-shrink: 0;
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.3), 2px 2px 6px rgba(0,0,0,0.4); }
+  .ball::before { content: ""; position: absolute; top: 4px; left: 8px; width: 10px; height: 7px;
+    background: rgba(255,255,255,0.5); border-radius: 50%; filter: blur(1px); }
+  .ball.sm { width: 30px; height: 30px; font-size: 0.8em; }
+  .ball.sm::before { top: 3px; left: 6px; width: 8px; height: 5px; }
+  .ball-red { background: radial-gradient(circle at 30% 30%, #ff5555, #c0392b); }
+  .ball-blue { background: radial-gradient(circle at 30% 30%, #4a90e2, #1e5fa8); }
+  .ball-green { background: radial-gradient(circle at 30% 30%, #2ecc71, #16a085); }
+  .ball-banker { box-shadow: 0 0 0 3px #ffd700, inset -3px -3px 8px rgba(0,0,0,0.3); }
+  .ball.hit { box-shadow: 0 0 0 3px #fff, 0 0 12px #ffd700; }
+  .ball.hit-sp { box-shadow: 0 0 0 3px #b388ff, 0 0 12px #b388ff; }
+  .ball.ball-banker.hit { box-shadow: 0 0 0 3px #ffd700, 0 0 0 6px #fff, 0 0 14px #ffd700; }
+  .ball.ball-banker.hit-sp { box-shadow: 0 0 0 3px #ffd700, 0 0 0 6px #b388ff, 0 0 14px #b388ff; }
+  .ball.ball-banker.miss { box-shadow: 0 0 0 3px #ffd700; }
+  .ball.miss { opacity: 0.35; }
+  .plus { color: #b8c5d6; font-weight: bold; padding: 0 2px; }
+  .tag-label { font-size: 0.8em; color: #ffd700; font-weight: bold; margin-right: 2px; }
+
+  .ticket-stats { display: flex; gap: 8px; font-size: 0.8em; color: #b8c5d6; flex-wrap: wrap; width: 100%; }
+  .ticket-stats span { background: rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 6px; }
+  .gold { background: linear-gradient(90deg, rgba(255,215,0,0.25), rgba(255,107,53,0.25)) !important; color: #ffd700; font-weight: bold; }
+
+  .color-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.85em; color: #b8c5d6; margin-top: 10px;
+    padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+  .empty-state { text-align: center; color: #6c7a89; padding: 30px 16px; }
+  .summary-bar { background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 14px; font-size: 0.92em; color: #ffd700; text-align: center; line-height: 1.6; }
+
+  details { margin-top: 8px; width: 100%; }
+  summary { cursor: pointer; color: #8fb8ff; font-size: 0.88em; padding: 4px 0; }
+  .combo-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 4px 12px;
+    font-family: Consolas, "Courier New", monospace; font-size: 0.85em; color: #d0d8e4; margin-top: 6px;
+    max-height: 320px; overflow-y: auto; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 8px; }
+  .combo-list .w { color: #ffd700; font-weight: bold; }
+
+  /* 開獎結果 */
+  .draw-card { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+  .draw-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .draw-no { color: #ffd700; font-weight: bold; }
+  .draw-date { color: #b8c5d6; font-size: 0.9em; }
+  .badge { padding: 3px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+  .badge-win { background: rgba(46,204,113,0.2); color: #5dff9d; border: 1px solid rgba(46,204,113,0.5); }
+  .badge-none { background: rgba(255,107,53,0.15); color: #ff9966; border: 1px solid rgba(255,107,53,0.4); }
+  table.prize { width: 100%; border-collapse: collapse; font-size: 0.85em; margin-top: 8px; }
+  table.prize th, table.prize td { padding: 6px 6px; border-bottom: 1px solid rgba(255,255,255,0.07); text-align: right; }
+  table.prize th:first-child, table.prize td:first-child { text-align: left; }
+  table.prize th { color: #8fa0b5; font-weight: normal; }
+  .nowin { color: #ff9966; }
+  .file-drop { border: 2px dashed rgba(255,215,0,0.4); border-radius: 12px; padding: 18px; text-align: center; color: #b8c5d6; }
+  .file-drop input { margin-top: 10px; color: #b8c5d6; max-width: 100%; }
+  .row-inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .row-inline input { width: 64px; text-align: center; }
+
+  footer { text-align: center; padding: 16px; color: #6c7a89; font-size: 0.82em; margin-top: 20px; line-height: 1.6; }
+  footer .warn { background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.3); border-radius: 8px;
+    padding: 10px; margin-top: 10px; color: #ff9966; }
+  footer a { color: #8fb8ff; }
+
+  /* 分析 */
+  .stat-status { font-size: 0.88em; color: #b8c5d6; line-height: 1.6; }
+  .hc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+  .hc-cell { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+    padding: 6px 4px 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.78em; color: #b8c5d6; }
+  .hc-cell b { color: #fff; font-size: 1.1em; }
+  .hc-bar { width: 80%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .hc-bar i { display: block; height: 100%; background: #ffd700; border-radius: 2px; }
+  .hc-cell.hot { border-color: rgba(255,107,53,0.7); }
+  .hc-cell.cold { border-color: rgba(143,184,255,0.7); }
+  .dist-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+  .dist-table td { padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,0.06); vertical-align: middle; }
+  .dist-table td:first-child { white-space: nowrap; color: #d0d8e4; width: 1%; padding-right: 8px; }
+  .dist-table td.num { text-align: right; white-space: nowrap; color: #b8c5d6; width: 1%; padding-left: 8px; }
+  .dbar { position: relative; height: 12px; background: rgba(255,255,255,0.06); border-radius: 3px; min-width: 80px; }
+  .dbar i { position: absolute; left: 0; top: 0; bottom: 0; background: #ffd700; border-radius: 0 4px 4px 0; }
+  .dbar s { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #fff; opacity: .85; text-decoration: none; }
+  .dist-legend { font-size: 0.8em; color: #8fa0b5; margin: 4px 0 10px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .dist-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .chart-wrap { position: relative; width: 100%; }
+  .chart-wrap svg { width: 100%; height: auto; display: block; }
+  .chart-tip { position: absolute; pointer-events: none; background: rgba(10,15,30,0.95); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px; padding: 6px 9px; font-size: 0.8em; color: #fff; white-space: nowrap; display: none; z-index: 2; }
+  .sub-h { font-size: 0.95em; color: #ffd700; margin: 14px 0 6px; }
+  .bt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 10px 0; }
+  .bt-tile { background: rgba(0,0,0,0.25); border-radius: 10px; padding: 10px; text-align: center; }
+  .bt-tile div { font-size: 0.78em; color: #8fa0b5; }
+  .bt-tile b { font-size: 1.25em; color: #fff; }
+  .bt-tile b.neg { color: #ff9966; } .bt-tile b.pos { color: #5dff9d; }
+  @media (max-width: 600px) {
+    h1 { font-size: 1.45em; }
+    .panel { padding: 14px; }
+    .ball { width: 34px; height: 34px; font-size: 0.88em; }
+    .btn { padding: 12px 16px; font-size: 0.92em; flex: 1 1 40%; }
+    .tab { font-size: 0.92em; padding: 11px 4px; }
+    table.prize { font-size: 0.78em; }
+  }
 </style>
 </head>
 <body>
-<header class="header">
-  <div class="logo">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
-    </svg>
-    HSI 財務分析
+<div class="container">
+  <header>
+    <h1>🎱 六合彩聰明抽珠系統</h1>
+    <div class="subtitle">Hong Kong Mark Six Smart Generator · 單式 / 複式 / 膽拖 · 對獎</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-page="pageDraw">🎲 抽珠</button>
+    <button class="tab" data-page="pageCheck">✅ 核對號碼</button>
+    <button class="tab" data-page="pageStats">📊 分析</button>
   </div>
-  <div class="header-right">
-    <span id="last-update" style="font-size:0.75rem;color:var(--text-muted)"></span>
-    <button class="theme-btn" id="theme-toggle">
-      <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-      </svg>
-      主題
-    </button>
-  </div>
-</header>
-<main class="container">
-  <div class="kpi-grid">
-    <div class="kpi-card"><div class="kpi-label">成份股總數</div><div class="kpi-value" id="kpi-total">—</div></div>
-    <div class="kpi-card"><div class="kpi-label">OCF/權益 ≥20%</div><div class="kpi-value" id="kpi-coe20" style="color:var(--success)">—</div></div>
-    <div class="kpi-card"><div class="kpi-label">OCF/權益 ≥15%</div><div class="kpi-value" id="kpi-coe15">—</div></div>
-    <div class="kpi-card"><div class="kpi-label">平均 ROE</div><div class="kpi-value" id="kpi-roe">—</div></div>
-    <div class="kpi-card"><div class="kpi-label">正 OCF 股票</div><div class="kpi-value" id="kpi-pos-ocf">—</div></div>
-  </div>
-  <div class="controls">
-    <div class="search-wrap">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search" placeholder="搜尋股票代碼或名稱…" autocomplete="off">
+
+  <!-- ================= 抽珠 ================= -->
+  <div class="page active" id="pageDraw">
+    <div class="panel">
+      <h2>投注方式</h2>
+      <div class="mode-switch">
+        <button class="mode-btn active" data-mode="single">單式（每注 6 個號碼）</button>
+        <button class="mode-btn" data-mode="multiple">複式（7 個或以上號碼）</button>
+        <button class="mode-btn" data-mode="banker">膽拖（膽 + 腳）</button>
+      </div>
+
+      <div class="controls-grid">
+        <div class="control-group">
+          <label id="numTicketsLabel">產生注數</label>
+          <input type="number" id="numTickets" value="5" min="1" max="100" inputmode="numeric">
+        </div>
+        <div class="control-group">
+          <label>顏色組合</label>
+          <select id="colorFilter">
+            <option value="any">不限顏色（純隨機）</option>
+            <option value="rgb">三色齊（單式每注／複式、膽拖每組必有紅、藍、綠）</option>
+            <option value="red">只用紅色</option>
+            <option value="blue">只用藍色</option>
+            <option value="green">只用綠色</option>
+            <option value="red-green">紅綠兩色（兩色都要有）</option>
+            <option value="green-blue">綠藍兩色（兩色都要有）</option>
+            <option value="blue-red">藍紅兩色（兩色都要有）</option>
+          </select>
+        </div>
+        <div class="control-group single-only">
+          <label>奇偶比例（奇:偶）</label>
+          <select id="oddEvenFilter">
+            <option value="any">不限</option>
+            <option value="6-0">6奇 0偶</option><option value="5-1">5奇 1偶</option>
+            <option value="4-2">4奇 2偶</option><option value="3-3">3奇 3偶</option>
+            <option value="2-4">2奇 4偶</option><option value="1-5">1奇 5偶</option>
+            <option value="0-6">0奇 6偶</option>
+          </select>
+        </div>
+        <div class="control-group single-only">
+          <label>大小比例（大:小，25 或以上為大）</label>
+          <select id="bigSmallFilter">
+            <option value="any">不限</option>
+            <option value="6-0">6大 0小</option><option value="5-1">5大 1小</option>
+            <option value="4-2">4大 2小</option><option value="3-3">3大 3小</option>
+            <option value="2-4">2大 4小</option><option value="1-5">1大 5小</option>
+            <option value="0-6">0大 6小</option>
+          </select>
+        </div>
+        <div class="control-group multi-only" style="display:none;">
+          <label>複式號碼數（括號內為注數及每組成本）</label>
+          <select id="multiCount"></select>
+        </div>
+        <div class="control-group multi-only" style="display:none;">
+          <label>聰明奇偶</label>
+          <select id="multiOddEven">
+            <option value="any">不限</option>
+            <option value="balanced" selected>奇偶平均</option>
+            <option value="odd">奇數較多</option>
+            <option value="even">偶數較多</option>
+          </select>
+        </div>
+        <div class="control-group multi-only" style="display:none;">
+          <label>聰明大小（25 或以上為大）</label>
+          <select id="multiBigSmall">
+            <option value="any">不限</option>
+            <option value="balanced" selected>大小平均</option>
+            <option value="big">大數較多</option>
+            <option value="small">小數較多</option>
+          </select>
+        </div>
+        <div class="control-group multi-only" style="display:none;">
+          <label>聰明分佈</label>
+          <select id="multiSpread">
+            <option value="any">不限</option>
+            <option value="smart" selected>聰明分佈（分散五區段、少連號）</option>
+            <option value="zones">只要求五個區段都有號碼</option>
+          </select>
+        </div>
+        <div class="control-group single-only">
+          <label>和值（6 個號碼總和）</label>
+          <select id="sumMode">
+            <option value="any">不限</option>
+            <option value="exact">指定和值（21–279 逐個揀）</option>
+            <option value="group">和值範圍（10 個一組）</option>
+            <option value="range">自訂和值範圍</option>
+          </select>
+        </div>
+        <div class="control-group sum-exact" style="display:none;">
+          <label>指定和值（括號內為歷史開出次數）</label>
+          <select id="sumExact"></select>
+        </div>
+        <div class="control-group sum-group" style="display:none;">
+          <label>和值範圍（括號內為歷史開出次數）</label>
+          <select id="sumGroup"></select>
+        </div>
+        <div class="control-group sum-range" style="display:none;">
+          <label>自訂和值範圍（21–279）</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="number" id="sumMin" value="130" min="21" max="279" inputmode="numeric" style="flex:1;min-width:0;">
+            <span>至</span>
+            <input type="number" id="sumMax" value="170" min="21" max="279" inputmode="numeric" style="flex:1;min-width:0;">
+          </div>
+        </div>
+        <div class="control-group banker-only" style="display:none;">
+          <label>膽數</label>
+          <select id="bankerCount">
+            <option value="1">1 膽</option><option value="2" selected>2 膽</option>
+            <option value="3">3 膽</option><option value="4">4 膽</option><option value="5">5 膽</option>
+          </select>
+        </div>
+        <div class="control-group banker-only" style="display:none;">
+          <label>腳數（括號內為組合數及每組成本）</label>
+          <select id="legCount"></select>
+        </div>
+      </div>
+      <div class="hint sum-panel" style="display:none;margin-top:12px;">
+        <div style="margin-bottom:6px;">快速設定：
+          <button class="btn btn-secondary btn-small sum-preset" data-v="131">131</button>
+          <button class="btn btn-secondary btn-small sum-preset" data-v="157">157</button>
+          <button class="btn btn-secondary btn-small sum-preset" data-v="168">168</button>
+          <button class="btn btn-secondary btn-small sum-preset" data-v="150">150</button>
+          <button class="btn btn-secondary btn-small sum-preset" data-v="140-160">140–160</button>
+          <button class="btn btn-secondary btn-small sum-preset" data-v="130-170">130–170</button>
+          <button class="btn btn-secondary btn-small sum-preset" data-v="120-180">120–180</button>
+          <button class="btn btn-secondary btn-small sum-preset" data-v="100-200">100–200</button>
+        </div>
+        <div id="sumInfo"></div>
+        <div style="margin-top:4px;opacity:.8;">131、157、168 係 2002 年轉用 49 個號碼後至 26/118 期最常開嘅和值（各 46 次），150 係理論上組合最多嘅和值。和值只係揀號風格，唔會提高中獎機會。</div>
+        <div id="histNote" style="margin-top:6px;"></div>
+        <details id="histDetails" style="margin-top:4px;">
+          <summary>🔄 歷史資料更新設定</summary>
+          <div style="margin-top:6px;">
+            每次開啟本頁會自動讀取最新一期（每 6 小時最多一次），新一期會自動加入歷史統計。如果有一段時間冇開過本頁而漏咗期數，可以喺下面貼上開獎紀錄補返（每行一期：期數 + 6 個攪出號碼，例如 <b>26/119 03 12 18 27 33 45 08</b>；日期會自動略過）。
+            <label style="display:flex;align-items:center;gap:6px;margin:8px 0;"><input type="checkbox" id="histAuto" checked style="width:auto;"> 開啟網頁時自動更新</label>
+            <textarea id="histPaste" placeholder="26/119 03 12 18 27 33 45 08&#10;26/120 ..." style="min-height:80px;"></textarea>
+            <div class="row-inline" style="margin-top:8px;">
+              <button class="btn btn-secondary btn-small" id="histImportBtn">📥 加入以上紀錄</button>
+              <button class="btn btn-secondary btn-small" id="histUpdateBtn">🔄 立即更新</button>
+              <button class="btn btn-secondary btn-small" id="histResetBtn">↩️ 還原內置資料</button>
+            </div>
+            <div id="histMsg" style="margin-top:6px;"></div>
+          </div>
+        </details>
+      </div>
+      <div class="hint multi-only" style="display:none;margin-top:12px;">
+        複式：每組選 7 個或以上號碼，系統會將所有 6 個號碼的組合展開成單式注項。例如 8 個號碼 = C(8,6) = 28 注。
+        聰明組合會令每組號碼的奇偶、大小較平均，並分散在 1–9、10–19、20–29、30–39、40–49 五個區段（號碼數 7 個時至少四個區段），避免一大串連號；顏色組合同樣適用。上面點選的心水號碼會出現在每組複式內。
+      </div>
+      <div class="hint banker-only" style="display:none;margin-top:12px;">
+        膽拖：膽碼每一注都會出現，腳由系統聰明抽出；系統會將「膽 + 腳」所有組合展開成單式注項。
+        例如 2 膽拖 5 腳 = C(5,4) = 5 注。成本以每注 $10 計算。膽拖模式下奇偶、大小過濾不適用（因為所有組合都要買齊）。
+      </div>
     </div>
-    <div class="filter-btns">
-      <button class="filter-btn active" data-filter="all">全部</button>
-      <button class="filter-btn" data-filter="coe20">COE≥20%</button>
-      <button class="filter-btn" data-filter="coe15">COE≥15%</button>
-      <button class="filter-btn" data-filter="neg">負OCF</button>
+
+    <div class="panel">
+      <h2 id="bankerTitle">心水膽碼（選填，最多 5 個）</h2>
+      <div class="hint" id="bankerHint">點選號碼作為每注都會出現的固定號碼，其餘由系統抽出。</div>
+      <div class="banker-section" id="bankerSection"></div>
+      <div class="color-legend">
+        <div class="legend-item"><span class="legend-dot ball-red"></span>紅色</div>
+        <div class="legend-item"><span class="legend-dot ball-blue"></span>藍色</div>
+        <div class="legend-item"><span class="legend-dot ball-green"></span>綠色</div>
+        <div class="legend-item">⭐ 金框表示膽碼</div>
+        <button class="btn btn-secondary btn-small" id="clearBankerBtn">清除膽碼</button>
+      </div>
     </div>
-    <select class="sort-select" id="sort-select">
-      <option value="symbol">股票代碼</option>
-      <option value="coe_ratio">OCF/權益↓</option>
-      <option value="revenue">營業收入↓</option>
-      <option value="roe">ROE↓</option>
-    </select>
-  </div>
-  <div class="table-wrap">
-    <div class="table-header">
-      <h2>成份股財務數據</h2>
-      <span class="count-badge" id="row-count">—</span>
+
+    <div class="panel">
+      <h2>號碼池（選填）</h2>
+      <div class="hint">揀一批號碼，系統只會喺呢批號碼入面抽，聰明組合、顏色、奇偶、大小、和值等條件照樣適用。每注幾多個號碼：單式 6 個，複式可揀 7–15 個；注數喺上面「產生注數／組數」設定。上面嘅膽碼會自動計入號碼池。</div>
+      <div class="banker-section" id="poolSection"></div>
+      <div class="row-inline" style="margin-top:10px;">
+        <button class="btn btn-secondary btn-small" id="poolAllBtn">全選</button>
+        <button class="btn btn-secondary btn-small" id="poolInvertBtn">反選</button>
+        <button class="btn btn-secondary btn-small" id="poolHotBtn">🔥 揀分析範圍最熱 15 個</button>
+        <button class="btn btn-secondary btn-small" id="poolClearBtn">清除號碼池</button>
+      </div>
+      <div id="poolInfo" class="hint" style="margin-top:10px;margin-bottom:0;"></div>
     </div>
-    <div class="table-scroll">
-      <div id="table-loading" class="loading"><div class="spinner"></div><br>載入中…</div>
-      <table id="main-table" style="display:none">
-        <thead><tr>
-          <th>代碼</th><th>名稱</th><th>年份</th>
-          <th>OCF/權益</th><th>OCF (億)</th><th>權益 (億)</th>
-          <th>收入 (億)</th><th>淨利潤 (億)</th>
-          <th>毛利率</th><th>淨利率</th><th>ROE</th>
-          <th>負債率</th><th>P/E</th><th>P/B</th>
-        </tr></thead>
-        <tbody id="table-body"></tbody>
-      </table>
-      <div id="table-empty" class="empty" style="display:none">沒有符合條件的股票</div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="generateBtn">🎲 開始抽珠</button>
+      <button class="btn btn-secondary" id="checkNowBtn">✅ 核對號碼</button>
+      <button class="btn btn-secondary" id="exportTxtBtn">📄 導出 TXT</button>
+      <button class="btn btn-secondary" id="exportCsvBtn">📊 導出 CSV</button>
+      <button class="btn btn-secondary" id="clearBtn">🗑️ 清除</button>
+    </div>
+
+    <div class="panel">
+      <h2>抽珠結果</h2>
+      <div id="summaryBar" class="summary-bar" style="display:none;"></div>
+      <div id="resultsArea"><div class="empty-state">按「開始抽珠」產生號碼</div></div>
     </div>
   </div>
-</main>
-<footer>HSI Financial Dashboard · 數據來源：financial.db · <span id="footer-year"></span></footer>
-<div class="drawer-overlay" id="drawer-overlay"></div>
-<div class="drawer" id="drawer">
-  <div class="drawer-header">
-    <div>
-      <div class="drawer-title" id="drawer-title">—</div>
-      <div class="drawer-sub" id="drawer-sub">—</div>
+
+  <!-- ================= 核對號碼 ================= -->
+  <div class="page" id="pageCheck">
+    <div class="panel">
+      <h2>步驟 1：載入你的號碼</h2>
+      <div class="file-drop">
+        選擇之前由本系統導出的 TXT 或 CSV 檔案（可一次揀多份，亦可分幾次加入）<br>
+        <input type="file" id="fileInput" multiple accept=".txt,.csv,text/plain,text/csv">
+      </div>
+      <div id="fileList" style="margin-top:10px;"></div>
+      <div class="hint" style="margin-top:12px;">另外亦可直接貼上 / 輸入號碼，會連同上面的檔案一齊核對（每行一注，6 個號碼；膽拖寫法：<b>膽 5 12 腳 1 8 23 30 41</b>；複式寫法：<b>複式 3 8 15 22 29 36 44</b>）</div>
+      <textarea id="pasteInput" placeholder="例如：&#10;05 12 23 28 35 41&#10;膽 07 18 腳 03 11 24 32 45"></textarea>
+      <div class="btn-row" style="margin:12px 0 0;">
+        <button class="btn btn-secondary btn-small" id="useCurrentBtn">使用本次抽珠結果</button>
+        <button class="btn btn-secondary btn-small" id="clearPasteBtn">清空文字</button>
+        <button class="btn btn-secondary btn-small" id="clearFilesBtn">移除全部檔案</button>
+      </div>
+      <div id="loadedInfo" class="hint" style="margin-top:10px;"></div>
     </div>
-    <button class="close-btn" id="drawer-close">✕</button>
+
+    <div class="panel">
+      <h2>步驟 2：輸入攪珠結果</h2>
+      <div class="hint">輸入今期 6 個攪出號碼及 1 個特別號碼。四至七獎為固定獎金；頭、二、三獎為浮動獎金，請以馬會公佈為準。</div>
+      <div class="row-inline" id="customInputs"></div>
+      <div class="btn-row" style="margin:12px 0 4px;justify-content:flex-start;">
+        <button class="btn btn-primary btn-small" id="fetchLatestBtn">⚡ 填入最新一期</button>
+        <button class="btn btn-secondary btn-small" id="clearDrawBtn">清除號碼</button>
+      </div>
+      <div id="latestInfo" class="hint" style="margin:6px 0 0;"></div>
+      <div class="controls-grid" style="margin-top:12px;">
+        <div class="control-group">
+          <label>期數 / 日期（選填，只用於報告）</label>
+          <input type="text" id="drawLabel" placeholder="例如 26/117">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="runCheckBtn">✅ 開始核對</button>
+        <button class="btn btn-secondary" id="exportCheckBtn">📄 導出核對報告</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>核對結果</h2>
+      <div id="checkSummary" class="summary-bar" style="display:none;"></div>
+      <div id="checkArea"><div class="empty-state">載入號碼後按「開始核對」</div></div>
+    </div>
   </div>
-  <div class="drawer-body">
-    <div class="metrics-grid" id="drawer-metrics"></div>
-    <div class="chart-section"><h3>OCF 及權益歷年趨勢</h3><div class="chart-canvas"><canvas id="chart-ocf" height="180"></canvas></div></div>
-    <div class="chart-section"><h3>收入 及 淨利潤 歷年趨勢</h3><div class="chart-canvas"><canvas id="chart-rev" height="180"></canvas></div></div>
-    <div class="chart-section"><h3>OCF/權益 % 歷年</h3><div class="chart-canvas"><canvas id="chart-coe" height="160"></canvas></div></div>
+
+  <!-- ================= 分析 ================= -->
+  <div class="page" id="pageStats">
+    <div class="panel">
+      <h2>歷史資料</h2>
+      <div id="statStatus" class="stat-status">載入中…</div>
+      <div class="controls-grid" style="margin-top:12px;">
+        <div class="control-group">
+          <label>分析範圍</label>
+          <select id="statRange">
+            <option value="30">最近 30 期</option>
+            <option value="50">最近 50 期</option>
+            <option value="100" selected>最近 100 期</option>
+            <option value="200">最近 200 期</option>
+            <option value="500">最近 500 期</option>
+            <option value="all">2002 年 7 月至今全部（49 個號碼制）</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:10px;">⚠️ 每期攪珠都係獨立隨機。「熱號」「冷號」「遺漏好耐」都只係描述過去，唔代表下期較大或較細機會開出。</div>
+    </div>
+
+    <div class="panel" id="statHotPanel">
+      <h2>冷熱號同遺漏</h2>
+      <div class="controls-grid">
+        <div class="control-group">
+          <label>排序</label>
+          <select id="hcSort">
+            <option value="num">按號碼</option>
+            <option value="cnt">出現次數（多 → 少）</option>
+            <option value="gap">遺漏期數（長 → 短）</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label style="display:flex;align-items:center;gap:6px;margin-top:22px;"><input type="checkbox" id="hcSpecial" style="width:auto;"> 包括特別號碼</label>
+        </div>
+      </div>
+      <div id="hcSummary" class="hint" style="margin-top:10px;"></div>
+      <div id="hcGrid" class="hc-grid"></div>
+      <div class="hint" style="margin-top:8px;">每格：號碼／範圍內出現次數／遺漏（距離上次開出幾多期，以全部歷史計）。橙框 = 範圍內最熱 6 個，藍框 = 最冷 6 個。</div>
+    </div>
+
+    <div class="panel">
+      <h2>分佈統計</h2>
+      <div class="dist-legend"><span><i style="display:inline-block;width:14px;height:10px;background:#ffd700;border-radius:2px;"></i>實際比例</span><span><i style="display:inline-block;width:2px;height:12px;background:#fff;"></i>理論比例（純隨機應有嘅比例）</span></div>
+      <div id="distArea"></div>
+    </div>
+
+    <div class="panel">
+      <h2>和值走勢</h2>
+      <div class="dist-legend"><span><i style="display:inline-block;width:16px;height:2px;background:#8fb8ff;"></i>每期和值</span><span><i style="display:inline-block;width:16px;height:2px;background:#ffd700;"></i>10 期平均</span><span><i style="display:inline-block;width:16px;border-top:2px dashed #8fa0b5;"></i>理論平均 150</span></div>
+      <div class="chart-wrap" id="sumChartWrap"><div class="chart-tip" id="sumTip"></div></div>
+      <div id="sumStats" class="hint" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="panel">
+      <h2>回測心水號碼</h2>
+      <div class="hint">輸入號碼（寫法同「核對號碼」頁一樣：每行一注；<b>膽 5 12 腳 1 8 23 30 41</b>；<b>複式 3 8 15 22 29 36 44</b>），計返如果喺「分析範圍」內每期都買，會中幾多、蝕幾多。</div>
+      <textarea id="btInput" placeholder="例如：&#10;05 12 23 28 35 41&#10;複式 3 8 15 22 29 36 44"></textarea>
+      <div class="btn-row" style="margin:12px 0 0;justify-content:flex-start;">
+        <button class="btn btn-primary btn-small" id="btRunBtn">▶ 開始回測</button>
+        <button class="btn btn-secondary btn-small" id="btUseCurrentBtn">使用本次抽珠結果</button>
+      </div>
+      <div id="btResult" style="margin-top:12px;"></div>
+    </div>
   </div>
+
+  <footer>
+    <div>以香港六合彩官方球色規則製作 · 攪珠結果可到 <a href="https://bet.hkjc.com/ch/marksix/results" target="_blank" rel="noopener">香港賽馬會網站</a> 查閱</div>
+    <div>獎金以每注 $10 計算。</div>
+    <div class="warn">⚠️ 溫馨提示：博彩娛樂，量力而為。本程式僅作參考及娛樂用途，不保證中獎，亦不能提高中獎機會。對獎請以馬會公佈為準。</div>
+  </footer>
 </div>
 <script>
-(function(){
-  const btn=document.getElementById('theme-toggle');
-  const icon=document.getElementById('theme-icon');
-  const html=document.documentElement;
-  let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
-  html.setAttribute('data-theme',d);
-  btn.addEventListener('click',function(){
-    d=d==='dark'?'light':'dark';
-    html.setAttribute('data-theme',d);
-    icon.innerHTML=d==='dark'
-      ?'<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
-      :'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+
+// ===== 號碼與顏色配置（香港六合彩官方球色） =====
+const RED_NUMBERS = [1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46];
+const BLUE_NUMBERS = [3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48];
+const GREEN_NUMBERS = [5,6,11,16,17,21,22,27,28,32,33,38,39,43,44,49];
+const COLOR_NAME = { red: '紅', blue: '藍', green: '綠' };
+const TIER_NAME = ['頭獎','二獎','三獎','四獎','五獎','六獎','七獎'];
+const TIER_RULE = ['中 6 個','中 5 個 + 特別號碼','中 5 個','中 4 個 + 特別號碼','中 4 個','中 3 個 + 特別號碼','中 3 個'];
+const FIXED_PRIZE = { 4: 9600, 5: 640, 6: 320, 7: 40 };
+const UNIT = 10;
+const MAX_COMBOS = 3003;
+
+function getColor(num) {
+  if (RED_NUMBERS.includes(num)) return 'red';
+  if (BLUE_NUMBERS.includes(num)) return 'blue';
+  return 'green';
+}
+const pad = n => String(n).padStart(2, '0');
+const money = n => '$' + Math.round(n).toLocaleString('en-US');
+const ballHtml = (n, cls = '') => `<span class="ball ball-${getColor(n)} ${cls}">${n}</span>`;
+
+// ===== 工具：組合數及展開 =====
+function nCr(n, r) {
+  if (r < 0 || r > n) return 0;
+  let res = 1;
+  for (let i = 1; i <= r; i++) res = res * (n - r + i) / i;
+  return Math.round(res);
+}
+function combinations(arr, k) {
+  const out = [], cur = [];
+  (function rec(start) {
+    if (cur.length === k) { out.push([...cur]); return; }
+    for (let i = start; i <= arr.length - (k - cur.length); i++) {
+      cur.push(arr[i]); rec(i + 1); cur.pop();
+    }
+  })(0);
+  return out;
+}
+
+// ===== 注項模型 =====
+// { type: 'single', nums: [6個] }
+// { type: 'multiple', nums: [7個或以上] }   ← 複式（核對用）
+// { type: 'banker', bankers: [...], legs: [...] }
+function expandEntry(e) {
+  if (e.type === 'single') return [[...e.nums].sort((a, b) => a - b)];
+  if (e.type === 'multiple') return combinations([...e.nums].sort((a, b) => a - b), 6);
+  const need = 6 - e.bankers.length;
+  return combinations([...e.legs].sort((a, b) => a - b), need)
+    .map(c => [...e.bankers, ...c].sort((a, b) => a - b));
+}
+function entryCount(e) {
+  if (e.type === 'single') return 1;
+  if (e.type === 'multiple') return nCr(e.nums.length, 6);
+  return nCr(e.legs.length, 6 - e.bankers.length);
+}
+function entryText(e) {
+  if (e.type === 'single') return e.nums.map(pad).join(' ');
+  if (e.type === 'multiple') return '複式 ' + e.nums.map(pad).join(' ');
+  return '膽 ' + e.bankers.map(pad).join(' ') + ' 腳 ' + e.legs.map(pad).join(' ');
+}
+
+// ===== 狀態 =====
+let mode = 'single';
+let selectedBankers = new Set();
+let currentEntries = [];
+let loadedEntries = [];
+let lastCheckReport = '';
+
+// ===== 分頁 =====
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => showPage(t.dataset.page));
+function showPage(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.page === id));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === id));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== 模式切換 =====
+document.querySelectorAll('.mode-btn').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  document.querySelectorAll('.single-only').forEach(el => el.style.display = m === 'single' ? '' : 'none');
+  document.querySelectorAll('.banker-only').forEach(el => el.style.display = m === 'banker' ? '' : 'none');
+  document.querySelectorAll('.multi-only').forEach(el => el.style.display = m === 'multiple' ? '' : 'none');
+  document.getElementById('numTicketsLabel').textContent = m === 'single' ? '產生注數'
+    : m === 'banker' ? '產生組數（每組一張膽拖）' : '產生組數（每組一張複式）';
+  const nt = document.getElementById('numTickets');
+  if (m !== 'single' && +nt.value > 10) nt.value = 1;
+  if (m !== 'single' && +nt.value < 1) nt.value = 1;
+  document.getElementById('bankerTitle').textContent = m === 'single' ? '心水膽碼（選填，最多 5 個）'
+    : m === 'banker' ? '指定膽碼（選填）' : '心水號碼（選填，每組複式都會包含）';
+  document.getElementById('bankerHint').textContent = m === 'single'
+    ? '點選號碼作為每注都會出現的固定號碼，其餘由系統抽出。'
+    : m === 'banker'
+    ? '可在此點選你的心水膽碼；如果點選數目少於「膽數」，不足的膽碼會由系統隨機補上。不點選即全部由系統抽出。'
+    : '點選的號碼會固定放入每一組複式，其餘號碼由系統聰明抽出；最多可點選「複式號碼數 − 1」個。';
+  buildLegOptions();
+  buildMultiOptions();
+  updateSumUI();
+  if (document.getElementById('poolInfo').childNodes.length) updatePoolUI();
+}
+
+// ===== 膽碼按鈕 =====
+function initBankerSection() {
+  const section = document.getElementById('bankerSection');
+  for (let i = 1; i <= 49; i++) {
+    const btn = document.createElement('button');
+    btn.className = `banker-btn ball-${getColor(i)}`;
+    btn.textContent = i;
+    btn.setAttribute('aria-pressed', 'false');
+    btn.setAttribute('aria-label', `${i} 號`);
+    btn.onclick = () => toggleBanker(i, btn);
+    section.appendChild(btn);
+  }
+}
+function toggleBanker(num, btn) {
+  if (selectedBankers.has(num)) {
+    selectedBankers.delete(num); btn.classList.remove('selected'); btn.setAttribute('aria-pressed', 'false');
+  } else {
+    const limit = mode === 'banker' ? +document.getElementById('bankerCount').value
+      : mode === 'multiple' ? (+document.getElementById('multiCount').value || 7) - 1 : 5;
+    if (selectedBankers.size >= limit) { alert(`最多只可選 ${limit} 個膽碼`); return; }
+    selectedBankers.add(num); btn.classList.add('selected'); btn.setAttribute('aria-pressed', 'true');
+  }
+  if (userPool.size) { buildLegOptions(); buildMultiOptions(); updatePoolUI(); }
+}
+document.getElementById('clearBankerBtn').onclick = () => {
+  selectedBankers.clear();
+  document.querySelectorAll('#bankerSection .banker-btn').forEach(b => { b.classList.remove('selected'); b.setAttribute('aria-pressed', 'false'); });
+  if (userPool.size) { buildLegOptions(); buildMultiOptions(); updatePoolUI(); }
+};
+
+// ===== 顏色設定 =====
+function getColorConfig(filter) {
+  const all = Array.from({ length: 49 }, (_, i) => i + 1);
+  switch (filter) {
+    case 'rgb': return { pool: all, required: ['red', 'blue', 'green'] };
+    case 'red': return { pool: [...RED_NUMBERS], required: ['red'] };
+    case 'blue': return { pool: [...BLUE_NUMBERS], required: ['blue'] };
+    case 'green': return { pool: [...GREEN_NUMBERS], required: ['green'] };
+    case 'red-green': return { pool: [...RED_NUMBERS, ...GREEN_NUMBERS], required: ['red', 'green'] };
+    case 'green-blue': return { pool: [...GREEN_NUMBERS, ...BLUE_NUMBERS], required: ['green', 'blue'] };
+    case 'blue-red': return { pool: [...BLUE_NUMBERS, ...RED_NUMBERS], required: ['blue', 'red'] };
+    default: return { pool: all, required: [] };
+  }
+}
+function hasColors(nums, required) {
+  const set = new Set(nums.map(getColor));
+  return required.every(c => set.has(c));
+}
+function checkFilters(nums, oddEven, bigSmall) {
+  if (oddEven !== 'any') {
+    const [wantOdd] = oddEven.split('-').map(Number);
+    if (nums.filter(n => n % 2 === 1).length !== wantOdd) return false;
+  }
+  if (bigSmall !== 'any') {
+    const [wantBig] = bigSmall.split('-').map(Number);
+    if (nums.filter(n => n >= 25).length !== wantBig) return false;
+  }
+  return true;
+}
+
+// ===== 腳數選項 =====
+function buildLegOptions() {
+  const sel = document.getElementById('legCount');
+  const prev = +sel.value || 0;
+  const b = +document.getElementById('bankerCount').value;
+  const { pool } = poolCfg(document.getElementById('colorFilter').value);
+  const k = 6 - b;
+  const maxLegs = pool.length - b;
+  sel.innerHTML = '';
+  for (let L = k + 1; L <= maxLegs; L++) {
+    const c = nCr(L, k);
+    if (c > MAX_COMBOS) break;
+    const o = document.createElement('option');
+    o.value = L;
+    o.textContent = `${b} 膽拖 ${L} 腳（${c} 注，${money(c * UNIT)}）`;
+    sel.appendChild(o);
+  }
+  if ([...sel.options].some(o => +o.value === prev)) sel.value = prev;
+}
+document.getElementById('bankerCount').onchange = () => {
+  const b = +document.getElementById('bankerCount').value;
+  if (selectedBankers.size > b) {
+    alert(`你已點選 ${selectedBankers.size} 個膽碼，多於 ${b} 膽，請先取消部份膽碼`);
+  }
+  buildLegOptions();
+};
+document.getElementById('colorFilter').onchange = () => { buildLegOptions(); buildMultiOptions(); if (typeof updatePoolUI === 'function' && document.getElementById('poolInfo').childNodes.length) updatePoolUI(); };
+
+// ===== 和值（單式） =====
+// 2002-07-04（02/001）至 2026-11-07（26/118）共 3,395 期，6 個攪出號碼總和的出現次數
+let HIST_BASE_SUM = {"27":1,"42":1,"45":1,"47":1,"50":1,"51":1,"52":1,"53":2,"54":1,"55":1,"56":1,"57":1,"58":1,"59":1,"60":1,"61":1,"63":1,"64":3,"65":2,"68":2,"70":1,"71":4,"72":2,"73":2,"74":3,"75":2,"76":3,"77":5,"78":5,"79":7,"80":4,"81":5,"82":5,"83":1,"84":5,"85":5,"86":6,"87":10,"88":11,"89":5,"90":11,"91":9,"92":14,"93":8,"94":6,"95":14,"96":18,"97":17,"98":14,"99":23,"100":9,"101":21,"102":11,"103":12,"104":12,"105":19,"106":19,"107":15,"108":10,"109":18,"110":29,"111":15,"112":17,"113":29,"114":25,"115":25,"116":19,"117":27,"118":24,"119":23,"120":19,"121":22,"122":30,"123":34,"124":26,"125":24,"126":40,"127":32,"128":34,"129":35,"130":37,"131":46,"132":34,"133":40,"134":28,"135":38,"136":34,"137":40,"138":33,"139":34,"140":42,"141":37,"142":33,"143":36,"144":38,"145":40,"146":45,"147":44,"148":33,"149":34,"150":41,"151":39,"152":39,"153":39,"154":42,"155":30,"156":44,"157":46,"158":43,"159":44,"160":37,"161":41,"162":41,"163":39,"164":37,"165":40,"166":33,"167":28,"168":46,"169":42,"170":29,"171":32,"172":24,"173":26,"174":32,"175":39,"176":41,"177":31,"178":23,"179":38,"180":34,"181":25,"182":33,"183":24,"184":28,"185":23,"186":21,"187":21,"188":23,"189":13,"190":17,"191":21,"192":17,"193":16,"194":9,"195":16,"196":19,"197":14,"198":17,"199":14,"200":20,"201":16,"202":14,"203":8,"204":11,"205":17,"206":8,"207":10,"208":7,"209":4,"210":7,"211":12,"213":4,"214":5,"215":3,"216":5,"217":4,"218":7,"219":4,"220":6,"221":3,"222":5,"223":5,"224":4,"225":2,"226":2,"228":2,"229":1,"230":1,"231":3,"233":2,"234":1,"235":2,"236":1,"241":2,"243":1,"246":1,"247":1,"252":1,"258":1};
+let HIST_BASE_DRAWS = 3395;
+let HIST_BASE_KEY = 26118;          // 內置資料截至 26/118 期
+let HIST_BASE_LABEL = '26/118（2026-11-07）';
+let HIST_SRC = '內置';
+let HIST_SUM = {}, HIST_DRAWS = 0;
+const SUM_MIN = 21, SUM_MAX = 279;
+
+// ===== 歷史資料自動更新 =====
+// 期數 "26/118" ⇄ 26118
+const drawKey = no => { const m = String(no).match(/^(\d{2})\/(\d{1,3})$/); return m ? +m[1] * 1000 + +m[2] : 0; };
+const keyLabel = k => `${pad(Math.floor(k / 1000))}/${String(k % 1000).padStart(3, '0')}`;
+function loadHistExtra() {
+  try { const o = JSON.parse(localStorage.getItem('ms_hist_extra') || '{}'); return o && typeof o === 'object' ? o : {}; }
+  catch (e) { return {}; }
+}
+function saveHistExtra(o) { try { localStorage.setItem('ms_hist_extra', JSON.stringify(o)); } catch (e) {} }
+function rebuildHist() {
+  const extra = loadHistExtra();
+  HIST_SUM = { ...HIST_BASE_SUM }; HIST_DRAWS = HIST_BASE_DRAWS;
+  const keys = Object.keys(extra).map(Number).filter(k => k > HIST_BASE_KEY).sort((a, b) => a - b);
+  keys.forEach(k => { const s = extra[k]; HIST_SUM[s] = (HIST_SUM[s] || 0) + 1; HIST_DRAWS++; });
+  // 檢查漏咗嘅期數（同一年內期數唔連續，或者由內置資料之後開始唔連續）
+  const missing = [];
+  let prev = HIST_BASE_KEY;
+  keys.forEach(k => {
+    if (Math.floor(k / 1000) === Math.floor(prev / 1000)) {
+      for (let x = prev + 1; x < k && missing.length < 50; x++) missing.push(x);
+    } else if (k % 1000 !== 1) {
+      for (let x = Math.floor(k / 1000) * 1000 + 1; x < k && missing.length < 50; x++) missing.push(x);
+    }
+    prev = k;
   });
-})();
-document.getElementById('footer-year').textContent=new Date().getFullYear();
-function fmtB(v){if(v==null)return '—';return (v/1e8).toLocaleString('zh-HK',{maximumFractionDigits:1});}
-function fmt(v,d){if(v==null)return '—';return Number(v).toLocaleString('zh-HK',{maximumFractionDigits:d||2});}
-function coeClass(v){if(v==null)return '';if(v>=20)return 'badge-pos';if(v>=10)return 'badge-mid';if(v<0)return 'badge-neg';return '';}
-var allData=[];var filteredData=[];var currentFilter='all';var charts={};
-fetch('/api/stocks').then(function(r){return r.json();}).then(function(data){
-  allData=data;
-  document.getElementById('table-loading').style.display='none';
-  document.getElementById('main-table').style.display='table';
-  var total=data.length;
-  document.getElementById('kpi-total').textContent=total;
-  document.getElementById('kpi-coe20').textContent=data.filter(function(x){return x.coe_ratio!=null&&x.coe_ratio>=20;}).length;
-  document.getElementById('kpi-coe15').textContent=data.filter(function(x){return x.coe_ratio!=null&&x.coe_ratio>=15;}).length;
-  var roes=data.filter(function(x){return x.roe!=null;}).map(function(x){return x.roe*100;});
-  document.getElementById('kpi-roe').textContent=roes.length?(roes.reduce(function(a,b){return a+b;},0)/roes.length).toFixed(1)+'%':'—';
-  document.getElementById('kpi-pos-ocf').textContent=data.filter(function(x){return x.ocf>0;}).length;
-  document.getElementById('last-update').textContent='已載入 '+total+' 隻';
-  applyFilters();
-}).catch(function(e){
-  document.getElementById('table-loading').innerHTML='<div style="color:var(--danger)">載入失敗：'+e.message+'</div>';
+  const last = keys.length ? keys[keys.length - 1] : HIST_BASE_KEY;
+  const note = document.getElementById('histNote');
+  if (note) {
+    note.innerHTML = `📚 歷史資料：共 <b>${HIST_DRAWS.toLocaleString('en-US')}</b> 期，截至 <b>${last === HIST_BASE_KEY ? HIST_BASE_LABEL : keyLabel(last)}</b>` +
+      (keys.length ? `（${HIST_SRC} ${HIST_BASE_DRAWS} 期 + 本機加入 ${keys.length} 期）` : `（${HIST_SRC}資料）`) +
+      (missing.length ? `<br><span class="nowin">⚠️ 中間漏咗 ${missing.length}${missing.length >= 50 ? '+' : ''} 期（例如 ${missing.slice(0, 5).map(keyLabel).join('、')}），統計會略有偏差，可喺下面「歷史資料更新設定」貼上補返</span>` : '');
+  }
+}
+// 加入一期；回傳 true 表示係新資料
+function addHistDraw(no, nums6) {
+  const k = drawKey(no);
+  if (!k || k <= HIST_BASE_KEY || !Array.isArray(nums6) || nums6.length !== 6) return false;
+  if (nums6.some(x => !Number.isInteger(x) || x < 1 || x > 49) || new Set(nums6).size !== 6) return false;
+  const extra = loadHistExtra();
+  const s = nums6.reduce((a, b) => a + b, 0);
+  if (extra[k] === s) return false;
+  extra[k] = s; saveHistExtra(extra);
+  return true;
+}
+function refreshHistUI() {
+  rebuildHist();
+  const ex = document.getElementById('sumExact'), gr = document.getElementById('sumGroup');
+  const keepEx = ex.value, keepGr = gr.value;
+  buildSumOptions();
+  if (keepEx) ex.value = keepEx;
+  if (keepGr) gr.value = keepGr;
+  updateSumUI();
+}
+// 解析貼上嘅開獎紀錄：每行 期數 + 6 個攪出號碼（特別號碼可有可無）
+function parseHistText(text) {
+  const out = [], bad = [];
+  normaliseText(text).split('\n').forEach(raw => {
+    let line = raw.trim();
+    if (!line) return;
+    let no = '';
+    let m = line.match(/(?:^|[^\d])(\d{2})\s*\/\s*(\d{3})(?![\d\/])/);
+    if (m) { no = `${m[1]}/${m[2]}`; line = line.replace(m[0], m[0][0].match(/\d/) ? '' : m[0][0]); }
+    else if ((m = line.match(/(?:^|[^\d])20(\d{2})(\d{3})(?!\d)/))) { no = `${m[1]}/${m[2]}`; line = line.replace(m[0], ' '); }
+    if (!no) { bad.push(raw.trim()); return; }
+    // 移除日期（2026-11-20、20/11/2026、2026/11/20 等）
+    line = line.replace(/\d{1,4}[\/\-.]\d{1,2}[\/\-.]\d{1,4}/g, ' ');
+    const nums = (line.match(/\d+/g) || []).map(Number).slice(0, 6);
+    if (nums.length < 6 || nums.some(x => x < 1 || x > 49) || new Set(nums).size !== 6) { bad.push(raw.trim()); return; }
+    out.push({ no, n: nums });
+  });
+  return { out, bad };
+}
+// 讀取最新一期（唔填入核對頁）
+async function fetchLatestRaw() {
+  let lastErr = '';
+  for (const url of LATEST_APIS) {
+    try {
+      const res = await fetchWithTimeout(url, 8000);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return parseLatest(await res.json());
+    } catch (e) { lastErr = e.name === 'AbortError' ? '連線逾時' : e.message; }
+  }
+  throw new Error(lastErr || '未能連線');
+}
+async function autoUpdateHist(force = false) {
+  const msg = document.getElementById('histMsg');
+  let auto = true;
+  try { auto = localStorage.getItem('ms_hist_auto') !== '0'; } catch (e) {}
+  if (!force && !auto) return;
+  let last = 0;
+  try { last = +localStorage.getItem('ms_hist_checked') || 0; } catch (e) {}
+  if (!force && Date.now() - last < 6 * 3600 * 1000) return;
+  if (force) msg.textContent = '⏳ 更新中…';
+  try {
+    const d = await fetchLatestRaw();
+    try { localStorage.setItem('ms_hist_checked', String(Date.now())); } catch (e) {}
+    const added = addHistDraw(d.no, d.n);
+    refreshHistUI();
+    if (force || added) msg.innerHTML = added ? `✔ 已加入第 ${escapeHtml(d.no)} 期` : `✔ 已經係最新（第 ${escapeHtml(d.no)} 期）`;
+  } catch (e) {
+    if (force) msg.innerHTML = `<span class="nowin">未能更新（${escapeHtml(e.message)}），可以稍後再試或貼上紀錄</span>`;
+  }
+}
+// 計算由 pool 揀 k 個號碼、和值為 s 的組合數目（動態規劃）
+function sumWaysTable(pool, k, maxS) {
+  const n = pool.length, W = maxS + 1, K = k + 1;
+  const t = new Float64Array((n + 1) * K * W);
+  const at = (i, j, s) => (i * K + j) * W + s;
+  t[at(n, 0, 0)] = 1;
+  for (let i = n - 1; i >= 0; i--) {
+    const p = pool[i];
+    for (let j = 0; j <= k; j++) for (let s = 0; s <= maxS; s++) {
+      let v = t[at(i + 1, j, s)];
+      if (j > 0 && s >= p) v += t[at(i + 1, j - 1, s - p)];
+      t[at(i, j, s)] = v;
+    }
+  }
+  return { t, at, n, k, maxS };
+}
+function countSumRange(tb, lo, hi) {
+  let c = 0;
+  for (let s = Math.max(0, lo); s <= Math.min(tb.maxS, hi); s++) c += tb.t[tb.at(0, tb.k, s)];
+  return c;
+}
+// 平均隨機抽一個和值在 lo..hi 之間的組合（每個合資格組合機會均等）
+function sampleSumCombo(pool, tb, lo, hi) {
+  const total = countSumRange(tb, lo, hi);
+  if (!total) return null;
+  let r = rand() * total, target = -1;
+  for (let s = Math.max(0, lo); s <= Math.min(tb.maxS, hi); s++) {
+    r -= tb.t[tb.at(0, tb.k, s)];
+    if (r < 0) { target = s; break; }
+  }
+  if (target < 0) target = Math.min(tb.maxS, hi);
+  const out = []; let j = tb.k, s = target;
+  for (let i = 0; i < tb.n && j > 0; i++) {
+    const p = pool[i];
+    const all = tb.t[tb.at(i, j, s)];
+    const take = s >= p ? tb.t[tb.at(i + 1, j - 1, s - p)] : 0;
+    if (all > 0 && rand() * all < take) { out.push(p); j--; s -= p; }
+  }
+  return j === 0 && s === 0 ? out : null;
+}
+function getSumRange() {
+  const m = document.getElementById('sumMode').value;
+  if (m === 'exact') { const v = parseInt(document.getElementById('sumExact').value); return { m, lo: v, hi: v }; }
+  if (m === 'group') { const [lo, hi] = document.getElementById('sumGroup').value.split('-').map(Number); return { m, lo, hi }; }
+  if (m === 'range') return { m, lo: parseInt(document.getElementById('sumMin').value), hi: parseInt(document.getElementById('sumMax').value) };
+  return { m, lo: SUM_MIN, hi: SUM_MAX };
+}
+let FULL_SUM_TABLE = null;
+const pctText = f => f > 0 && f < 0.0001 ? '少於 0.01%' : (f * 100).toFixed(2) + '%';
+function updateSumUI() {
+  const m = document.getElementById('sumMode').value;
+  const single = mode === 'single';
+  document.querySelectorAll('.sum-exact').forEach(el => el.style.display = single && m === 'exact' ? '' : 'none');
+  document.querySelectorAll('.sum-range').forEach(el => el.style.display = single && m === 'range' ? '' : 'none');
+  document.querySelectorAll('.sum-group').forEach(el => el.style.display = single && m === 'group' ? '' : 'none');
+  document.querySelectorAll('.sum-panel').forEach(el => el.style.display = single && m !== 'any' ? '' : 'none');
+  const info = document.getElementById('sumInfo');
+  if (m === 'any' || !single) { info.innerHTML = ''; return; }
+  const { lo, hi } = getSumRange();
+  if (isNaN(lo) || isNaN(hi) || lo < SUM_MIN || hi > SUM_MAX || lo > hi) {
+    info.innerHTML = `<span class="nowin">和值需在 ${SUM_MIN}–${SUM_MAX} 之間${m === 'range' ? '，而且由細至大' : ''}</span>`; return;
+  }
+  if (!FULL_SUM_TABLE) FULL_SUM_TABLE = sumWaysTable(Array.from({ length: 49 }, (_, i) => i + 1), 6, SUM_MAX);
+  const ways = countSumRange(FULL_SUM_TABLE, lo, hi);
+  let h = 0; for (let x = lo; x <= hi; x++) h += HIST_SUM[x] || 0;
+  const label = lo === hi ? `和值 ${lo}` : `和值 ${lo}–${hi}`;
+  // 註：HIST_SUM / HIST_DRAWS 已包含自動更新嘅期數
+  info.innerHTML = `📊 ${label}：共 <b>${ways.toLocaleString('en-US')}</b> 個組合（佔全部 13,983,816 個嘅 ${pctText(ways / 13983816)}）｜` +
+    `歷史 ${HIST_DRAWS.toLocaleString('en-US')} 期開過 <b>${h}</b> 次（${(h / HIST_DRAWS * 100).toFixed(2)}%）`;
+}
+function buildSumOptions() {
+  const ex = document.getElementById('sumExact'), gr = document.getElementById('sumGroup');
+  const histIn = (lo, hi) => { let h = 0; for (let x = lo; x <= hi; x++) h += HIST_SUM[x] || 0; return h; };
+  ex.innerHTML = '';
+  for (let v = SUM_MIN; v <= SUM_MAX; v++) {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = `${v}（${HIST_SUM[v] || 0} 次）`;
+    ex.appendChild(o);
+  }
+  ex.value = 150;
+  gr.innerHTML = '';
+  for (let g = 20; g <= 270; g += 10) {
+    const lo = Math.max(SUM_MIN, g), hi = Math.min(SUM_MAX, g + 9), h = histIn(lo, hi);
+    const o = document.createElement('option');
+    o.value = `${lo}-${hi}`;
+    o.textContent = `${lo}–${hi}（${h} 次，${(h / HIST_DRAWS * 100).toFixed(1)}%）`;
+    gr.appendChild(o);
+  }
+  gr.value = '150-159';
+}
+rebuildHist();
+buildSumOptions();
+document.getElementById('histAuto').checked = (() => { try { return localStorage.getItem('ms_hist_auto') !== '0'; } catch (e) { return true; } })();
+document.getElementById('histAuto').onchange = ev => { try { localStorage.setItem('ms_hist_auto', ev.target.checked ? '1' : '0'); } catch (e) {} };
+document.getElementById('histUpdateBtn').onclick = () => autoUpdateHist(true);
+document.getElementById('histImportBtn').onclick = () => {
+  const { out, bad } = parseHistText(document.getElementById('histPaste').value);
+  let added = 0, old = 0;
+  out.forEach(d => { if (drawKey(d.no) <= HIST_BASE_KEY) old++; else if (addHistDraw(d.no, d.n)) added++; });
+  refreshHistUI();
+  document.getElementById('histMsg').innerHTML = `✔ 新加入 ${added} 期` +
+    (old ? `，${old} 期已包含喺內置資料` : '') +
+    (bad.length ? `<br><span class="nowin">${bad.length} 行未能讀取：${escapeHtml(bad.slice(0, 3).join('；'))}${bad.length > 3 ? '…' : ''}</span>` : '');
+  if (added) document.getElementById('histPaste').value = '';
+};
+document.getElementById('histResetBtn').onclick = () => {
+  if (!confirm(`確定刪除本機自動加入嘅歷史資料，還原到${HIST_SRC}資料（${HIST_BASE_LABEL}）？`)) return;
+  try { localStorage.removeItem('ms_hist_extra'); localStorage.removeItem('ms_hist_checked'); } catch (e) {}
+  refreshHistUI();
+  document.getElementById('histMsg').textContent = `已還原${HIST_SRC}資料`;
+};
+document.getElementById('sumMode').onchange = updateSumUI;
+['sumExact', 'sumGroup'].forEach(id => document.getElementById(id).onchange = updateSumUI);
+['sumMin', 'sumMax'].forEach(id => document.getElementById(id).oninput = updateSumUI);
+document.querySelectorAll('.sum-preset').forEach(b => b.onclick = () => {
+  const v = b.dataset.v;
+  if (v.includes('-')) {
+    const [a, c] = v.split('-');
+    document.getElementById('sumMode').value = 'range';
+    document.getElementById('sumMin').value = a; document.getElementById('sumMax').value = c;
+  } else {
+    document.getElementById('sumMode').value = 'exact';
+    document.getElementById('sumExact').value = v;
+  }
+  updateSumUI();
 });
-function applyFilters(){
-  var q=document.getElementById('search').value.toLowerCase();
-  var sort=document.getElementById('sort-select').value;
-  filteredData=allData.filter(function(r){
-    var sym=(r.symbol||'').toLowerCase();
-    var nm=(r.name||'').toLowerCase();
-    if(q&&!sym.includes(q)&&!nm.includes(q))return false;
-    if(currentFilter==='coe20')return r.coe_ratio!=null&&r.coe_ratio>=20;
-    if(currentFilter==='coe15')return r.coe_ratio!=null&&r.coe_ratio>=15;
-    if(currentFilter==='neg')return r.ocf!=null&&r.ocf<0;
-    return true;
+
+// ===== 複式號碼數選項 =====
+const MULTI_MAX = 15;
+function buildMultiOptions() {
+  const sel = document.getElementById('multiCount');
+  const prev = +sel.value || 8;
+  const { pool } = poolCfg(document.getElementById('colorFilter').value);
+  sel.innerHTML = '';
+  for (let N = 7; N <= Math.min(MULTI_MAX, pool.length); N++) {
+    const c = nCr(N, 6);
+    const o = document.createElement('option');
+    o.value = N;
+    o.textContent = `${N} 個號碼（${c.toLocaleString('en-US')} 注，${money(c * UNIT)}）`;
+    sel.appendChild(o);
+  }
+  if ([...sel.options].some(o => +o.value === prev)) sel.value = prev;
+}
+
+// ===== 複式聰明過濾 =====
+function ratioOk(cnt, total, want) {
+  const other = total - cnt;
+  const tol = total % 2 ? 1 : 2;           // 單數號碼數：相差 1；雙數：相差 0 或 2
+  if (want === 'balanced') return Math.abs(cnt - other) <= tol;
+  if (want === 'odd' || want === 'big') return cnt > other;
+  if (want === 'even' || want === 'small') return cnt < other;
+  return true;
+}
+function maxRun(nums) {
+  const a = [...nums].sort((x, y) => x - y);
+  let best = 1, cur = 1;
+  for (let i = 1; i < a.length; i++) { cur = a[i] === a[i - 1] + 1 ? cur + 1 : 1; best = Math.max(best, cur); }
+  return best;
+}
+const zoneOf = n => Math.min(4, Math.floor(n / 10));   // 1-9,10-19,20-29,30-39,40-49
+function zoneCount(nums) { return new Set(nums.map(zoneOf)).size; }
+function checkMultiFilters(nums, oe, bs, spread, cfg) {
+  const N = nums.length;
+  if (!ratioOk(nums.filter(x => x % 2).length, N, oe)) return false;
+  if (!ratioOk(nums.filter(x => x >= 25).length, N, bs)) return false;
+  if (spread !== 'any') {
+    const poolZones = new Set(cfg.pool.map(zoneOf)).size;
+    const needZones = Math.min(poolZones, N >= 8 ? 5 : 4);
+    if (zoneCount(nums) < needZones) return false;
+    if (spread === 'smart' && maxRun(nums) > 3) return false;
+  }
+  return true;
+}
+
+// ===== 複式：抽一組 =====
+function drawOneMultiple(shuffler, fixed, N, cfg, oe, bs, spread, maxAttempts = 3000) {
+  const need = N - fixed.length;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const extra = shuffler.drawMany(need, fixed);
+    if (extra.length < need) { shuffler.returnBalls(extra); return null; }
+    const nums = [...fixed, ...extra].sort((a, b) => a - b);
+    if (hasColors(nums, cfg.required) && checkMultiFilters(nums, oe, bs, spread, cfg)) return { type: 'multiple', nums };
+    shuffler.returnBalls(extra);
+    if (attempt % 10 === 9) shuffler.reset();
+  }
+  return null;
+}
+document.getElementById('multiCount').onchange = () => {
+  const N = +document.getElementById('multiCount').value;
+  if (mode === 'multiple' && selectedBankers.size > N - 1) alert(`你已點選 ${selectedBankers.size} 個心水號碼，${N} 個號碼的複式最多只可固定 ${N - 1} 個，請先取消部份號碼`);
+};
+
+// ===== 洗珠機 =====
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function rand() {
+  if (window.crypto && crypto.getRandomValues) {
+    const u = new Uint32Array(1); crypto.getRandomValues(u); return u[0] / 4294967296;
+  }
+  return Math.random();
+}
+class BallShuffler {
+  constructor(pool) { this.pool = [...pool]; this.bag = shuffle(this.pool); }
+  _drawOne() { if (this.bag.length === 0) this.bag = shuffle(this.pool); return this.bag.pop(); }
+  _putBack(balls) {
+    balls.forEach(ball => {
+      const idx = Math.floor(rand() * (this.bag.length + 1));
+      this.bag.splice(idx, 0, ball);
+    });
+  }
+  drawMany(n, exclude = []) {
+    const result = [], putBack = [];
+    let safety = 0;
+    while (result.length < n && safety < 400) {
+      const ball = this._drawOne();
+      if (exclude.includes(ball) || result.includes(ball)) putBack.push(ball);
+      else result.push(ball);
+      safety++;
+    }
+    this._putBack(putBack);
+    return result;
+  }
+  returnBalls(balls) { this._putBack(balls); }
+  // 連續抽唔到合適組合時，重新洗混整袋珠
+  reset() { this.bag = shuffle(this.pool); }
+}
+
+// ===== 單式：抽一注 =====
+function drawOneTicket(shuffler, bankers, cfg, oddEven, bigSmall, maxAttempts = 800) {
+  const needed = 6 - bankers.length;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const extra = shuffler.drawMany(needed, bankers);
+    if (extra.length < needed) { shuffler.returnBalls(extra); return null; }
+    const picked = [...bankers, ...extra].sort((a, b) => a - b);
+    if (hasColors(picked, cfg.required) && checkFilters(picked, oddEven, bigSmall)) return picked;
+    shuffler.returnBalls(extra);
+    if (attempt % 10 === 9) shuffler.reset();
+  }
+  return null;
+}
+
+// ===== 膽拖：抽一組 =====
+function drawOneBanker(shuffler, fixedBankers, bCount, legCount, cfg, maxAttempts = 800) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const extraBankers = shuffler.drawMany(bCount - fixedBankers.length, fixedBankers);
+    const bankers = [...fixedBankers, ...extraBankers].sort((a, b) => a - b);
+    const legs = shuffler.drawMany(legCount, bankers).sort((a, b) => a - b);
+    if (bankers.length === bCount && legs.length === legCount && hasColors([...bankers, ...legs], cfg.required)) {
+      return { type: 'banker', bankers, legs };
+    }
+    shuffler.returnBalls([...extraBankers, ...legs]);
+    if (attempt % 10 === 9) shuffler.reset();
+  }
+  return null;
+}
+
+// ===== 主要產生函數 =====
+function generate() {
+  const n = parseInt(document.getElementById('numTickets').value);
+  const colorFilter = document.getElementById('colorFilter').value;
+  const cfg = poolCfg(colorFilter);
+  const bankersSel = Array.from(selectedBankers).sort((a, b) => a - b);
+  const maxN = mode === 'single' ? 100 : 10;
+  if (isNaN(n) || n < 1 || n > maxN) { alert(`${mode === 'single' ? '注數' : '組數'}必須在 1 至 ${maxN} 之間`); return; }
+
+  const invalid = bankersSel.filter(b => !cfg.pool.includes(b));
+  if (invalid.length) { alert(`膽碼 ${invalid.join(', ')} 不在所選顏色範圍內，請調整顏色或膽碼`); return; }
+
+  const shuffler = new BallShuffler(cfg.pool);
+  const entries = [];
+  let fail = 0, dup = 0;
+  // 避免產生完全相同嘅注項：每項最多重抽 50 次
+  const seen = new Set();
+  const pushUnique = drawFn => {
+    for (let t = 0; t < 50; t++) {
+      const e = drawFn();
+      if (!e) break;
+      const key = entryText(e);
+      if (!seen.has(key)) { seen.add(key); if (e.type !== 'banker') e.fixed = bankersSel; entries.push(e); return; }
+      if (t === 49) { dup++; return; }
+    }
+    fail++;
+  };
+
+  if (mode === 'multiple') {
+    const N = +document.getElementById('multiCount').value;
+    if (!N) { alert('所選顏色範圍號碼不足，未能組成複式，請放寬顏色條件'); return; }
+    if (bankersSel.length > N - 1) { alert(`你點選了 ${bankersSel.length} 個心水號碼，${N} 個號碼的複式最多只可固定 ${N - 1} 個`); return; }
+    const oe = document.getElementById('multiOddEven').value;
+    const bs = document.getElementById('multiBigSmall').value;
+    const sp = document.getElementById('multiSpread').value;
+    for (let i = 0; i < n; i++) pushUnique(() => drawOneMultiple(shuffler, bankersSel, N, cfg, oe, bs, sp));
+  } else if (mode === 'single' && document.getElementById('sumMode').value !== 'any') {
+    const oddEven = document.getElementById('oddEvenFilter').value;
+    const bigSmall = document.getElementById('bigSmallFilter').value;
+    const { lo, hi } = getSumRange();
+    if (isNaN(lo) || isNaN(hi) || lo < SUM_MIN || hi > SUM_MAX || lo > hi) { alert(`和值需在 ${SUM_MIN}–${SUM_MAX} 之間，範圍要由細至大`); return; }
+    const bSum = bankersSel.reduce((a, b) => a + b, 0);
+    const rest = cfg.pool.filter(x => !bankersSel.includes(x)).sort((a, b) => a - b);
+    const k = 6 - bankersSel.length;
+    const tb = sumWaysTable(rest, k, Math.max(0, hi - bSum));
+    if (hi - bSum < 0 || !countSumRange(tb, lo - bSum, hi - bSum)) {
+      alert('以目前嘅膽碼及顏色設定，冇任何組合符合呢個和值，請調整和值或者膽碼'); return;
+    }
+    for (let i = 0; i < n; i++) pushUnique(() => {
+      for (let a = 0; a < 5000; a++) {
+        const extra = sampleSumCombo(rest, tb, lo - bSum, hi - bSum);
+        if (!extra) return null;
+        const picked = [...bankersSel, ...extra].sort((x, y) => x - y);
+        if (hasColors(picked, cfg.required) && checkFilters(picked, oddEven, bigSmall)) return { type: 'single', nums: picked };
+      }
+      return null;
+    });
+  } else if (mode === 'single') {
+    const oddEven = document.getElementById('oddEvenFilter').value;
+    const bigSmall = document.getElementById('bigSmallFilter').value;
+    // 膽碼本身已違反顏色規則時，仍可由其餘號碼補足顏色
+    for (let i = 0; i < n; i++) pushUnique(() => {
+      const t = drawOneTicket(shuffler, bankersSel, cfg, oddEven, bigSmall);
+      return t ? { type: 'single', nums: t } : null;
+    });
+  } else {
+    const bCount = +document.getElementById('bankerCount').value;
+    const legCount = +document.getElementById('legCount').value;
+    if (!legCount) { alert('所選顏色範圍號碼不足，未能組成膽拖，請放寬顏色條件'); return; }
+    if (bankersSel.length > bCount) { alert(`你點選了 ${bankersSel.length} 個膽碼，但膽數只設定為 ${bCount}`); return; }
+    for (let i = 0; i < n; i++) pushUnique(() => drawOneBanker(shuffler, bankersSel, bCount, legCount, cfg));
+  }
+
+  if (!entries.length) { alert('無法產生符合條件的號碼組合，請放寬過濾條件'); return; }
+  currentEntries = entries;
+  try { localStorage.setItem('ms_last_entries', JSON.stringify(entries)); } catch (e) {}
+  renderEntries(entries, fail, dup);
+}
+
+// ===== 顯示抽珠結果 =====
+function renderEntries(entries, fail = 0, dup = 0) {
+  const area = document.getElementById('resultsArea');
+  const summary = document.getElementById('summaryBar');
+  area.innerHTML = '';
+  const totalBets = entries.reduce((s, e) => s + entryCount(e), 0);
+  const unitName = { banker: '組膽拖', multiple: '組複式', single: '注' }[entries[0].type] || '注';
+  let txt = `✨ 共 ${entries.length} ${unitName}，合共 ${totalBets} 注，成本 ${money(totalBets * UNIT)}`;
+  if (entries[0].type === 'single' && document.getElementById('sumMode').value !== 'any') {
+    const { lo, hi } = getSumRange();
+    txt += `｜${lo === hi ? '指定和值 ' + lo : '和值範圍 ' + lo + '–' + hi}`;
+  }
+  if (fail) txt += `（${fail} 項因條件限制未能產生）`;
+  if (dup) txt += `（${dup} 項因符合條件嘅組合太少、只會重複而略去）`;
+  summary.innerHTML = txt;
+  summary.style.display = 'block';
+
+  const comboHtml = combos => combos.map((c, i) => `<div>${String(i + 1).padStart(4, ' ')}. ${c.map(pad).join(' ')}</div>`).join('');
+  const colorStat = arr => `紅${arr.filter(x => getColor(x) === 'red').length} 藍${arr.filter(x => getColor(x) === 'blue').length} 綠${arr.filter(x => getColor(x) === 'green').length}`;
+
+  entries.forEach((e, idx) => {
+    const div = document.createElement('div');
+    div.className = 'result-ticket';
+    const fixed = new Set(e.fixed || []);
+    if (e.type === 'single') {
+      const nums = e.nums;
+      const sum = nums.reduce((a, b) => a + b, 0);
+      const odd = nums.filter(x => x % 2).length;
+      const big = nums.filter(x => x >= 25).length;
+      div.innerHTML = `
+        <div class="ticket-num">第 ${idx + 1} 注</div>
+        <div class="balls">${nums.map(x => ballHtml(x, fixed.has(x) ? 'ball-banker' : '')).join('')}</div>
+        <div class="ticket-stats">
+          <span>和值 ${sum}</span><span>奇偶 ${odd}:${6 - odd}</span><span>大小 ${big}:${6 - big}</span>
+          <span>${colorStat(nums)}</span>
+        </div>`;
+    } else if (e.type === 'multiple') {
+      const nums = e.nums, N = nums.length;
+      const count = entryCount(e);
+      const sum = nums.reduce((a, b) => a + b, 0);
+      const odd = nums.filter(x => x % 2).length;
+      const big = nums.filter(x => x >= 25).length;
+      div.innerHTML = `
+        <div class="ticket-num">第 ${idx + 1} 組</div>
+        <div class="balls"><span class="tag-label">複式</span>${nums.map(x => ballHtml(x, fixed.has(x) ? 'ball-banker' : '')).join('')}</div>
+        <div class="ticket-stats">
+          <span>${N} 個號碼複式</span><span>${count.toLocaleString('en-US')} 注</span><span>成本 ${money(count * UNIT)}</span>
+          <span>和值 ${sum}</span><span>奇偶 ${odd}:${N - odd}</span><span>大小 ${big}:${N - big}</span>
+          <span>${colorStat(nums)}</span><span>區段 ${zoneCount(nums)}/5</span><span>最長連號 ${maxRun(nums)}</span>
+        </div>
+        <details><summary>展開全部 ${count.toLocaleString('en-US')} 注組合</summary><div class="combo-list"></div></details>`;
+    } else {
+      const count = entryCount(e);
+      div.innerHTML = `
+        <div class="ticket-num">第 ${idx + 1} 組</div>
+        <div class="balls"><span class="tag-label">膽</span>${e.bankers.map(x => ballHtml(x, 'ball-banker')).join('')}
+          <span class="plus">拖</span>${e.legs.map(x => ballHtml(x)).join('')}</div>
+        <div class="ticket-stats">
+          <span>${e.bankers.length} 膽拖 ${e.legs.length} 腳</span><span>${count} 注</span>
+          <span>成本 ${money(count * UNIT)}</span><span>${colorStat([...e.bankers, ...e.legs])}</span>
+        </div>
+        <details><summary>展開全部 ${count} 注組合</summary><div class="combo-list"></div></details>`;
+    }
+    // 組合清單撳開先產生，避免一次過建立幾萬個元素
+    const det = div.querySelector('details');
+    if (det) det.addEventListener('toggle', () => {
+      const list = det.querySelector('.combo-list');
+      if (det.open && !list.childElementCount) list.innerHTML = comboHtml(expandEntry(e));
+    });
+    area.appendChild(div);
   });
-  filteredData.sort(function(a,b){
-    if(sort==='symbol')return (a.symbol||'').localeCompare(b.symbol||'');
-    var av=a[sort]!=null?a[sort]:-Infinity, bv=b[sort]!=null?b[sort]:-Infinity;
-    return bv-av;
-  });
-  renderTable(filteredData);
 }
-function renderTable(data){
-  document.getElementById('row-count').textContent=data.length+' 隻';
-  var tbody=document.getElementById('table-body');
-  var empty=document.getElementById('table-empty');
-  if(!data.length){tbody.innerHTML='';empty.style.display='block';return;}
-  empty.style.display='none';
-  tbody.innerHTML=data.map(function(r){
-    var coe=r.coe_ratio;
-    var coeStr=coe!=null?coe.toFixed(1)+'%':'—';
-    var cc=coeClass(coe);
-    return '<tr onclick="openDrawer(\''+r.symbol+'\')">'+
-      '<td><span class="symbol-cell">'+r.symbol+'</span></td>'+
-      '<td><span class="name-cell">'+(r.name||'—')+'</span></td>'+
-      '<td>'+(r.year||'—')+'</td>'+
-      '<td><span class="badge '+cc+'">'+coeStr+'</span></td>'+
-      '<td>'+fmtB(r.ocf)+'</td>'+
-      '<td>'+fmtB(r.equity)+'</td>'+
-      '<td>'+fmtB(r.revenue)+'</td>'+
-      '<td>'+fmtB(r.net_profit)+'</td>'+
-      '<td>'+(r.gross_margin!=null?(r.gross_margin*100).toFixed(1)+'%':'—')+'</td>'+
-      '<td>'+(r.net_margin!=null?(r.net_margin*100).toFixed(1)+'%':'—')+'</td>'+
-      '<td>'+(r.roe!=null?(r.roe*100).toFixed(1)+'%':'—')+'</td>'+
-      '<td>'+(r.debt_ratio!=null?(r.debt_ratio*100).toFixed(1)+'%':'—')+'</td>'+
-      '<td>'+(r.pe_ratio!=null?fmt(r.pe_ratio,1):'—')+'</td>'+
-      '<td>'+(r.pb_ratio!=null?fmt(r.pb_ratio,2):'—')+'</td>'+
-      '</tr>';
-  }).join('');
+
+// ===== 對獎核心 =====
+function prizeFor(nums, draw) {
+  const m = nums.filter(x => draw.n.includes(x)).length;
+  const sp = nums.includes(draw.s);
+  let tier = 0;
+  if (m === 6) tier = 1;
+  else if (m === 5) tier = sp ? 2 : 3;
+  else if (m === 4) tier = sp ? 4 : 5;
+  else if (m === 3) tier = sp ? 6 : 7;
+  let amount = 0, floating = false;
+  if (tier) {
+    if (draw.p && draw.p[tier - 1] && draw.p[tier - 1][1] > 0) amount = draw.p[tier - 1][0];
+    else if (FIXED_PRIZE[tier]) amount = FIXED_PRIZE[tier];
+    else floating = true;
+  }
+  return { m, sp, tier, amount, floating };
 }
-document.querySelectorAll('.filter-btn').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    currentFilter=btn.dataset.filter;
-    applyFilters();
-  });
-});
-document.getElementById('search').addEventListener('input',applyFilters);
-document.getElementById('sort-select').addEventListener('change',applyFilters);
-function openDrawer(symbol){
-  var stock=allData.find(function(s){return s.symbol===symbol;});
-  if(!stock)return;
-  document.getElementById('drawer-title').textContent=stock.symbol+' · '+(stock.name||'');
-  document.getElementById('drawer-sub').textContent='年份：'+(stock.year||'—')+' | OCF/權益：'+(stock.coe_ratio!=null?stock.coe_ratio.toFixed(1)+'%':'—');
-  var metrics=[
-    {label:'OCF (億)',value:fmtB(stock.ocf)},
-    {label:'股東權益 (億)',value:fmtB(stock.equity)},
-    {label:'營業收入 (億)',value:fmtB(stock.revenue)},
-    {label:'淨利潤 (億)',value:fmtB(stock.net_profit)},
-    {label:'ROE',value:stock.roe!=null?(stock.roe*100).toFixed(1)+'%':'—'},
-    {label:'毛利率',value:stock.gross_margin!=null?(stock.gross_margin*100).toFixed(1)+'%':'—'},
-    {label:'P/E',value:stock.pe_ratio!=null?fmt(stock.pe_ratio,1):'—'},
-    {label:'流動比率',value:stock.current_ratio!=null?fmt(stock.current_ratio,2):'—'},
-  ];
-  document.getElementById('drawer-metrics').innerHTML=metrics.map(function(m){
-    return '<div class="metric-card"><div class="metric-label">'+m.label+'</div><div class="metric-value">'+m.value+'</div></div>';
-  }).join('');
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-  fetch('/api/stock/'+symbol+'/history').then(function(r){return r.json();}).then(function(hist){
-    drawCharts(hist);
+function checkEntries(entries, draw) {
+  return entries.map(e => {
+    const combos = expandEntry(e);
+    const tiers = [0, 0, 0, 0, 0, 0, 0, 0];
+    let total = 0, floating = false;
+    const wins = [];
+    combos.forEach(c => {
+      const r = prizeFor(c, draw);
+      if (r.tier) {
+        tiers[r.tier]++; total += r.amount; floating = floating || r.floating;
+        wins.push({ c, r });
+      }
+    });
+    return { e, combos: combos.length, tiers, total, floating, wins };
   });
 }
-function drawCharts(hist){
-  var labels=hist.map(function(h){return h.year;});
-  var isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  var grid=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.08)';
-  var txt=isDark?'#8e8e93':'#6b7280';
-  var opts={responsive:true,plugins:{legend:{labels:{color:txt,font:{size:11}}}},scales:{x:{grid:{color:grid},ticks:{color:txt,font:{size:10}}},y:{grid:{color:grid},ticks:{color:txt,font:{size:10}}}}};
-  ['ocf','rev','coe'].forEach(function(k){if(charts[k]){charts[k].destroy();}});
-  charts.ocf=new Chart(document.getElementById('chart-ocf'),{type:'bar',data:{labels:labels,datasets:[
-    {label:'OCF (億)',data:hist.map(function(h){return h.ocf?+(h.ocf/1e8).toFixed(1):null;}),backgroundColor:'rgba(1,105,111,0.7)',borderRadius:4},
-    {label:'權益 (億)',data:hist.map(function(h){return h.equity?+(h.equity/1e8).toFixed(1):null;}),type:'line',borderColor:'#d97706',backgroundColor:'transparent',tension:0.3,pointRadius:3}
-  ]},options:opts});
-  charts.rev=new Chart(document.getElementById('chart-rev'),{type:'bar',data:{labels:labels,datasets:[
-    {label:'收入 (億)',data:hist.map(function(h){return h.revenue?+(h.revenue/1e8).toFixed(1):null;}),backgroundColor:'rgba(67,122,34,0.7)',borderRadius:4},
-    {label:'淨利潤 (億)',data:hist.map(function(h){return h.net_profit?+(h.net_profit/1e8).toFixed(1):null;}),backgroundColor:'rgba(220,38,38,0.5)',borderRadius:4}
-  ]},options:opts});
-  charts.coe=new Chart(document.getElementById('chart-coe'),{type:'line',data:{labels:labels,datasets:[
-    {label:'OCF/權益 %',data:hist.map(function(h){return h.coe_ratio;}),borderColor:'#4f98a3',backgroundColor:'rgba(79,152,163,0.15)',tension:0.4,pointRadius:4,fill:true}
-  ]},options:opts});
+function tierSummary(tiers) {
+  const s = [];
+  for (let t = 1; t <= 7; t++) if (tiers[t]) s.push(`${TIER_NAME[t - 1]} ×${tiers[t]}`);
+  return s.join('、');
 }
-function closeDrawer(){
-  document.getElementById('drawer-overlay').classList.remove('open');
-  document.getElementById('drawer').classList.remove('open');
+
+// ===== 一鍵取得最新一期攪珠結果 =====
+// 馬會官方接口不容許其他網頁直接讀取，所以使用公開免費接口（設有 3 個後備網址）
+const LATEST_APIS = [
+  'https://api3.marksix6.net/lottery_api.php?type=hk',
+  'https://api1.marksix6.net/lottery_api.php?type=hk',
+  'https://api2.marksix6.net/lottery_api.php?type=hk'
+];
+async function fetchWithTimeout(url, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try { return await fetch(url + (url.includes('?') ? '&' : '?') + '_=' + Date.now(), { signal: ctrl.signal, cache: 'no-store' }); }
+  finally { clearTimeout(t); }
 }
-document.getElementById('drawer-close').addEventListener('click',closeDrawer);
-document.getElementById('drawer-overlay').addEventListener('click',closeDrawer);
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
+function parseLatest(j) {
+  const raw = (j.numbers && j.numbers.length ? j.numbers : String(j.openCode || '').split(',')).map(x => parseInt(x, 10));
+  if (raw.length !== 7 || raw.some(x => isNaN(x) || x < 1 || x > 49) || new Set(raw).size !== 7) throw new Error('號碼格式不正確');
+  const exp = String(j.expect || '').replace(/[^\d\/]/g, '').slice(0, 10);
+  const no = /^\d{7}$/.test(exp) ? `${exp.slice(2, 4)}/${exp.slice(4)}` : exp;   // 2026116 → 26/116
+  const date = String(j.openTime || '').slice(0, 10).replace(/[^\d\-\/]/g, '');
+  return { n: raw.slice(0, 6).sort((a, b) => a - b), s: raw[6], no, date };
+}
+async function fetchLatestDraw() {
+  const btn = document.getElementById('fetchLatestBtn');
+  const info = document.getElementById('latestInfo');
+  btn.disabled = true; btn.textContent = '⏳ 讀取中…';
+  info.innerHTML = '正在取得最新一期攪珠結果…';
+  try {
+    const d = await fetchLatestRaw();
+    const dateTxt = d.date ? '（' + d.date + '）' : '';
+    document.querySelectorAll('.cd').forEach((el, i) => el.value = d.n[i]);
+    document.getElementById('cdSpecial').value = d.s;
+    document.getElementById('drawLabel').value = `${d.no}${dateTxt}`;
+    info.innerHTML = `<span style="color:#5dff9d;font-weight:bold;">✔ 已填入第 ${escapeHtml(d.no)} 期${escapeHtml(dateTxt)}</span>　` +
+      `<span class="balls" style="display:inline-flex;vertical-align:middle;margin-top:6px;">${d.n.map(x => ballHtml(x, 'sm')).join('')}<span class="plus">+</span>${ballHtml(d.s, 'sm')}</span>` +
+      `<br>資料來自公開接口（非馬會官方），對獎請以 <a href="https://bet.hkjc.com/ch/marksix/results" target="_blank" rel="noopener" style="color:#8fb8ff;">馬會公佈</a> 為準。`;
+    try { localStorage.setItem('ms_last_draw', JSON.stringify({ n: d.n, s: d.s, label: document.getElementById('drawLabel').value })); } catch (e) {}
+    if (addHistDraw(d.no, d.n)) refreshHistUI();
+  } catch (e) {
+    info.innerHTML = `<span class="nowin">未能取得最新一期結果（${escapeHtml(e.message)}）。請檢查網絡連線，或手動輸入號碼。</span>`;
+  }
+  btn.disabled = false; btn.textContent = '⚡ 填入最新一期';
+}
+
+// ===== 核對頁：攪珠號碼輸入 =====
+function initCheckPage() {
+  const box = document.getElementById('customInputs');
+  box.innerHTML = [1, 2, 3, 4, 5, 6].map(i => `<input type="number" min="1" max="49" inputmode="numeric" class="cd" placeholder="${i}">`).join('') +
+    `<span class="plus">+ 特別號</span><input type="number" min="1" max="49" inputmode="numeric" id="cdSpecial" placeholder="特">`;
+  // 每次輸入即時保存（Android 揀檔案時可能會重新載入網頁）
+  const saveDrawInputs = () => {
+    try {
+      localStorage.setItem('ms_last_draw', JSON.stringify({
+        n: [...document.querySelectorAll('.cd')].map(el => el.value),
+        s: document.getElementById('cdSpecial').value,
+        label: document.getElementById('drawLabel').value
+      }));
+    } catch (e) {}
+  };
+  [...document.querySelectorAll('.cd'), document.getElementById('cdSpecial'), document.getElementById('drawLabel')]
+    .forEach(el => el.addEventListener('input', saveDrawInputs));
+  // 記住上次輸入的攪珠號碼
+  try {
+    const saved = JSON.parse(localStorage.getItem('ms_last_draw') || 'null');
+    if (saved) {
+      document.querySelectorAll('.cd').forEach((el, i) => el.value = saved.n[i] || '');
+      document.getElementById('cdSpecial').value = saved.s || '';
+      document.getElementById('drawLabel').value = saved.label || '';
+    }
+  } catch (e) {}
+}
+
+// ===== 檔案 / 文字解析 =====
+// 保留所有數字，交由 makeEntry / makeBanker 檢查範圍（唔再靜靜刪走超出範圍嘅號碼）
+function numsIn(str) {
+  return (str.match(/\d+/g) || []).map(Number);
+}
+const outOfRange = nums => nums.filter(x => x < 1 || x > 49);
+function makeEntry(nums, errors, line, allowMulti = false) {
+  const bad = outOfRange(nums);
+  if (bad.length) { errors.push(`號碼超出 1–49（${bad.join(', ')}）：${line}`); return null; }
+  const u = [...new Set(nums)];
+  if (u.length !== nums.length) { errors.push(`號碼重複：${line}`); return null; }
+  if (u.length === 6) return { type: 'single', nums: u.sort((a, b) => a - b) };
+  if (u.length >= 7 && u.length <= 15) {
+    if (!allowMulti) { errors.push(`有 ${u.length} 個號碼，如係複式請喺前面加「複式」：${line}`); return null; }
+    return { type: 'multiple', nums: u.sort((a, b) => a - b) };
+  }
+  if (u.length > 0) errors.push(`號碼數目不正確（${u.length} 個）：${line}`);
+  return null;
+}
+function makeBanker(bankers, legs, errors, line) {
+  const bad = outOfRange([...bankers, ...legs]);
+  if (bad.length) { errors.push(`號碼超出 1–49（${bad.join(', ')}）：${line}`); return null; }
+  bankers = [...new Set(bankers)]; legs = [...new Set(legs)].filter(x => !bankers.includes(x));
+  if (bankers.length < 1 || bankers.length > 5) { errors.push(`膽碼數目需為 1 至 5 個：${line}`); return null; }
+  if (legs.length < 7 - bankers.length) { errors.push(`腳數不足：${line}`); return null; }
+  if (nCr(legs.length, 6 - bankers.length) > 20000) { errors.push(`組合太多：${line}`); return null; }
+  return { type: 'banker', bankers: bankers.sort((a, b) => a - b), legs: legs.sort((a, b) => a - b) };
+}
+function normaliseText(text) {
+  return String(text || '')
+    .replace(/\uFEFF/g, '')
+    .replace(/[\uFF10-\uFF19]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))  // 全形數字 → 半形
+    .replace(/\u3000/g, ' ').replace(/，/g, ',').replace(/：/g, ':')
+    .replace(/[擔担胆]/g, '膽').replace(/脚/g, '腳').replace(/\r/g, '\n');
+}
+function parseTickets(text) {
+  const entries = [], errors = [];
+  normaliseText(text).split(/\r?\n/).forEach(raw => {
+    // 「   1. 05 12 ...」（頁面展開組合清單嘅格式）當作一注單式
+    const line = raw.trim().replace(/[$＄]\s*[\d,]+(\.\d+)?/g, '').replace(/^\d+\.\s+/, '');
+    if (!line || /^方式|組合\s*\d|^=|⚠|時間|日期|期數|成本|派彩|總計|^注數[：:]/.test(line)) return;
+    // CSV（只限本系統 CSV 格式的行；TXT 內「$29,250」之類的金額逗號不算）
+    if (line.includes(',') && !/[｜|]/.test(line) && /^(膽拖|單式|複式|類型|注數|\d+)\s*,/.test(line)) {
+      const c = line.split(',').map(s => s.trim());
+      if (c[0] === '膽拖') { const e = makeBanker(numsIn(c[2] || ''), numsIn(c[3] || ''), errors, line); if (e) entries.push(e); return; }
+      if (c[0] === '單式' || c[0] === '複式') { const e = makeEntry(numsIn(c[3] || ''), errors, line, c[0] === '複式'); if (e) entries.push(e); return; }
+      if (/^\d+$/.test(c[0]) && c.length >= 7) { // 舊版 CSV：注數,號碼1..6,...
+        const e = makeEntry(c.slice(1, 7).map(Number), errors, line); if (e) entries.push(e); return;
+      }
+      if (c.every(s => /^\d+$/.test(s))) { const e = makeEntry(c.map(Number), errors, line); if (e) entries.push(e); }
+      return;
+    }
+    // 膽拖寫法
+    if (/(腳|拖)/.test(line)) {
+      let s = line.replace(/第\s*\d+\s*[組注]/, '');
+      let idx = s.indexOf('腳');
+      if (idx < 0) idx = s.lastIndexOf('拖');
+      const before = s.slice(0, idx);
+      const bi = before.lastIndexOf('膽');
+      const bankStr = bi >= 0 ? before.slice(bi + 1) : before;
+      const legStr = s.slice(idx + 1).split(/[｜|共$＄]/)[0];
+      const e = makeBanker(numsIn(bankStr), numsIn(legStr), errors, line);
+      if (e) entries.push(e);
+      return;
+    }
+    // 「第 N 注： 01 02 ...」
+    const m = line.match(/[注組]\s*[：:]\s*(.*)$/);
+    if (m) { const e = makeEntry(numsIn(m[1].replace(/複式/, '')), errors, line, /複式/.test(line)); if (e) entries.push(e); return; }
+    if (/[：:]/.test(line)) return; // 其他標題行
+    const s = line.replace(/第\s*\d+\s*[注組]/, '').replace(/複式/, '');
+    if (/[^\d\s\-、.,，+]/.test(s)) return; // 包含其他文字，略過
+    const e = makeEntry(numsIn(s), errors, line, /複式/.test(line)); if (e) entries.push(e);
+  });
+  return { entries, errors };
+}
+// 多個來源：每份檔案一個來源，加上手動輸入
+let fileSources = [];          // [{ name, entries, errors }]
+let pasteSource = { name: '手動輸入', entries: [], errors: [] };
+function escapeHtml(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function allSources() { return [...fileSources, pasteSource].filter(s => s.entries.length || s.errors.length); }
+function describe(entries) {
+  const bets = entries.reduce((s, e) => s + entryCount(e), 0);
+  const singles = entries.filter(e => e.type === 'single').length;
+  const bankers = entries.filter(e => e.type === 'banker').length;
+  const multis = entries.filter(e => e.type === 'multiple').length;
+  const parts = [];
+  if (singles) parts.push(`單式 ${singles} 注`);
+  if (bankers) parts.push(`膽拖 ${bankers} 組`);
+  if (multis) parts.push(`複式 ${multis} 組`);
+  return `${parts.join('、') || '0 注'}，展開 ${bets} 注`;
+}
+function saveFileSources() {
+  try {
+    const data = fileSources.map(f => ({ name: f.name, size: f.size, text: f.text || '' }));
+    localStorage.setItem('ms_loaded_files', JSON.stringify(data));
+  } catch (e) { /* 檔案太大就唔保存 */ }
+}
+function restoreFileSources() {
+  try {
+    const data = JSON.parse(localStorage.getItem('ms_loaded_files') || '[]');
+    fileSources = data.map(f => { const { entries, errors } = parseTickets(f.text); return { name: f.name, size: f.size, text: f.text, entries, errors }; });
+  } catch (e) { fileSources = []; }
+}
+function refreshLoaded() {
+  saveFileSources();
+  loadedEntries = [];
+  allSources().forEach(src => src.entries.forEach((e, k) => {
+    e.src = src.name; e.idx = k + 1;
+    loadedEntries.push(e);
+  }));
+  // 檔案清單
+  document.getElementById('fileList').innerHTML = fileSources.map((f, i) => `
+    <div class="result-ticket" style="padding:8px 12px;margin-bottom:6px;">
+      <div style="flex:1;min-width:0;word-break:break-all;">📄 <b>${escapeHtml(f.name)}</b><br>
+        <span class="hint" style="margin:0;">${f.entries.length ? describe(f.entries) : '未能讀到號碼'}${f.errors.length ? `　<span class="nowin">${f.errors.length} 行未能讀取</span>` : ''}</span></div>
+      <button class="btn btn-secondary btn-small" data-rm="${i}">移除</button>
+    </div>`).join('');
+  document.querySelectorAll('[data-rm]').forEach(btn => btn.onclick = () => { fileSources.splice(+btn.dataset.rm, 1); refreshLoaded(); });
+  // 總結
+  const srcs = allSources();
+  let html = loadedEntries.length
+    ? `合共 ${srcs.filter(s => s.entries.length).length} 個來源：${describe(loadedEntries)}`
+    : (srcs.length ? '未能讀到任何號碼' : '');
+  const errs = srcs.flatMap(s => s.errors.map(e => `${s.name}：${e}`));
+  if (errs.length) html += `<br><span class="nowin">有 ${errs.length} 行未能讀取：${escapeHtml(errs.slice(0, 3).join('；'))}${errs.length > 3 ? '…' : ''}</span>`;
+  document.getElementById('loadedInfo').innerHTML = html;
+}
+function readAs(f, enc) {
+  return new Promise(res => { const r = new FileReader(); r.onload = () => res(String(r.result || '')); r.onerror = () => res(''); r.readAsText(f, enc); });
+}
+async function readFileText(f) {
+  let t = await readAs(f, 'utf-8');
+  // 如檔案曾用 Windows 記事本等另存為 Big5，UTF-8 會出現亂碼，改用 Big5 再讀
+  if (t.includes('\uFFFD')) { const t2 = await readAs(f, 'big5'); if (t2 && !t2.includes('\uFFFD')) t = t2; }
+  return t;
+}
+const fileInputEl = document.getElementById('fileInput');
+fileInputEl.onchange = async ev => {
+  const files = [...ev.target.files];
+  for (const f of files) {
+    const text = await readFileText(f);
+    const { entries, errors } = parseTickets(text);
+    if (!entries.length && !errors.length) errors.push(`檔案內未找到號碼（開頭內容：${String(text).slice(0, 60).replace(/\s+/g, ' ') || '空白'}）`);
+    let name = f.name, n = 2;
+    const existing = fileSources.findIndex(x => x.name === f.name && x.size === f.size);
+    if (existing >= 0) { fileSources[existing] = { name, size: f.size, text, entries, errors }; continue; } // 同一檔案重複加入就取代
+    while (fileSources.some(x => x.name === name)) name = `${f.name} (${n++})`;
+    fileSources.push({ name, size: f.size, text, entries, errors });
+  }
+  ev.target.value = '';  // 容許再揀同一個檔案
+  refreshLoaded();
+};
+function setPaste(text) {
+  document.getElementById('pasteInput').value = text;
+  try { localStorage.setItem('ms_paste', text); } catch (e) {}
+  const { entries, errors } = parseTickets(text);
+  pasteSource = { name: '手動輸入', entries, errors };
+  refreshLoaded();
+}
+let pasteTimer = 0;
+document.getElementById('pasteInput').oninput = () => {
+  clearTimeout(pasteTimer);
+  pasteTimer = setTimeout(() => setPaste(document.getElementById('pasteInput').value), 300);
+};
+document.getElementById('useCurrentBtn').onclick = () => {
+  let entries = currentEntries;
+  if (!entries.length) { try { entries = JSON.parse(localStorage.getItem('ms_last_entries') || '[]'); } catch (e) {} }
+  if (!entries.length) { alert('暫時未有抽珠結果，請先到「抽珠」頁產生號碼'); return; }
+  setPaste(entries.map(entryText).join('\n'));
+};
+document.getElementById('clearPasteBtn').onclick = () => setPaste('');
+document.getElementById('clearFilesBtn').onclick = () => { fileSources = []; refreshLoaded(); };
+
+// ===== 執行核對 =====
+function getSelectedDraws() {
+  const n = [...document.querySelectorAll('.cd')].map(i => parseInt(i.value));
+  const sp = parseInt(document.getElementById('cdSpecial').value);
+  const all = [...n, sp];
+  if (all.some(x => isNaN(x) || x < 1 || x > 49) || new Set(all).size !== 7) {
+    alert('請輸入 6 個不重複的攪出號碼及 1 個特別號碼（1–49）'); return null;
+  }
+  const label = document.getElementById('drawLabel').value.trim();
+  try { localStorage.setItem('ms_last_draw', JSON.stringify({ n, s: sp, label })); } catch (e) {}
+  return [{ no: label, date: '', n: n.sort((a, b) => a - b), s: sp, p: null }];
+}
+function runCheck(entries = loadedEntries) {
+  if (!entries.length) {
+    const errs = allSources().flatMap(x => x.errors);
+    alert(errs.length
+      ? `已選檔案但未能讀到號碼：\n${errs.slice(0, 3).join('\n')}\n\n請確認檔案是由本系統導出的 TXT/CSV。`
+      : '未有任何注項：請在「步驟 1」選擇 TXT/CSV 檔案，或在文字框貼上號碼。\n（如剛才已選檔案但看不到檔案名稱，請再選一次）');
+    return;
+  }
+  const draws = getSelectedDraws();
+  if (!draws) return;
+  const d = draws[0];
+  // 期數格式正確（例如 26/119）就順手加入歷史統計
+  const pno = (d.no.match(/\b\d{2}\/\d{3}\b/) || [''])[0];
+  if (pno && addHistDraw(pno, d.n)) refreshHistUI();
+  const area = document.getElementById('checkArea');
+  const sum = document.getElementById('checkSummary');
+  const bets = entries.reduce((s, e) => s + entryCount(e), 0);
+  let report = `六合彩對獎報告\n核對時間：${new Date().toLocaleString('zh-HK')}\n注項：${entries.length} 項，合共 ${bets} 注（每期成本 ${money(bets * UNIT)}）\n${'='.repeat(44)}\n`;
+
+  const res = checkEntries(entries, d);
+  const total = res.reduce((s, r) => s + r.total, 0);
+  const floating = res.some(r => r.floating);
+  const tiers = [0, 0, 0, 0, 0, 0, 0, 0];
+  res.forEach(r => r.tiers.forEach((v, i) => tiers[i] += v));
+  const winBets = tiers.reduce((a, b) => a + b, 0);
+  sum.innerHTML = `${d.no ? escapeHtml(d.no) + '　' : ''}攪出：${d.n.map(pad).join(' ')} + ${pad(d.s)}<br>` +
+    (winBets ? `🎉 中獎 ${winBets} 注（${tierSummary(tiers)}），獎金合共 <b>${total || !floating ? money(total) : ''}</b>${floating ? (total ? ' + ' : '') + '浮動獎金（以馬會公佈為準）' : ''}` : '今期未有中獎') +
+    `　｜　成本 ${money(bets * UNIT)}` + subtotalHtml(sourceSubtotals(res), 1);
+  sum.style.display = 'block';
+  report += `${d.no ? '期數：' + d.no + '\n' : ''}攪出號碼：${d.n.map(pad).join(' ')}  特別號碼：${pad(d.s)}\n\n`;
+  area.innerHTML = res.map((r, i) => renderCheckEntry(r, i, d)).join('');
+  sourceSubtotals(res).forEach((o, k) => report += `【${k}】${o.bets} 注，中獎 ${o.wins} 注，獎金 ${money(o.total)}${o.floating ? ' + 浮動獎金' : ''}\n`);
+  report += '\n';
+  res.forEach((r, i) => {
+    report += `${r.e.src ? '[' + r.e.src + '] ' : ''}第 ${r.e.idx || i + 1} 項  ${entryText(r.e)}（${r.combos} 注）：${r.wins.length ? tierSummary(r.tiers) + '，' + money(r.total) + (r.floating ? ' + 浮動獎金' : '') : '未中獎'}\n`;
+    if (r.e.type !== 'single') r.wins.forEach(w => report += `      ${w.c.map(pad).join(' ')}  ${TIER_NAME[w.r.tier - 1]} ${w.r.floating ? '浮動' : money(w.r.amount)}\n`);
+  });
+  report += `\n合共獎金：${money(total)}${floating ? ' + 浮動獎金' : ''}\n`;
+  report += `${'='.repeat(44)}\n⚠️ 對獎結果僅供參考，請以馬會公佈為準\n`;
+  lastCheckReport = report;
+}
+function entryLabel(e, i, unit) {
+  const multi = allSources().filter(x => x.entries.length).length > 1;
+  if (e.src && multi) return `<span style="font-size:.78em;color:#8fb8ff;display:block;word-break:break-all;">${escapeHtml(e.src)}</span>第 ${e.idx} ${unit}`;
+  return `第 ${e.idx || i + 1} ${unit}`;
+}
+function subtotalHtml(map, nDraws) {
+  if (map.size < 2) return '';
+  return '<div style="text-align:left;margin-top:8px;border-top:1px solid rgba(255,215,0,.3);padding-top:6px;">' +
+    [...map].map(([k, o]) => `📄 ${escapeHtml(k)}：${o.bets} 注${nDraws > 1 ? ` × ${nDraws} 期` : ''}，成本 ${money(o.bets * UNIT * nDraws)}，中獎 ${o.wins} 注，獎金 <b>${money(o.total)}</b>${o.floating ? ' + 浮動' : ''}`).join('<br>') + '</div>';
+}
+function sourceSubtotals(res) {
+  const map = new Map();
+  res.forEach(r => {
+    const k = r.e.src || '號碼';
+    const o = map.get(k) || { bets: 0, total: 0, wins: 0, floating: false };
+    o.bets += r.combos; o.total += r.total; o.wins += r.wins.length; o.floating = o.floating || r.floating;
+    map.set(k, o);
+  });
+  return map;
+}
+function renderCheckEntry(r, i, d) {
+  const hitCls = x => d.n.includes(x) ? 'hit' : (x === d.s ? 'hit-sp' : 'miss');
+  const status = r.wins.length
+    ? `<span class="gold">${tierSummary(r.tiers)}，${money(r.total)}${r.floating ? ' + 浮動獎金' : ''}</span>`
+    : '<span>未中獎</span>';
+  if (r.e.type === 'single') {
+    const p = prizeFor(r.e.nums, d);
+    return `<div class="result-ticket ${p.tier ? 'win' : ''}"><div class="ticket-num">${entryLabel(r.e, i, '注')}</div>
+      <div class="balls">${r.e.nums.map(x => ballHtml(x, hitCls(x))).join('')}</div>
+      <div class="ticket-stats"><span>中 ${p.m} 個${p.sp ? ' + 特別號碼' : ''}</span>${status}</div></div>`;
+  }
+  const label = r.e.type === 'banker' ? '膽拖' : '複式';
+  const ballsHtml = r.e.type === 'banker'
+    ? `<span class="tag-label">膽</span>${r.e.bankers.map(x => ballHtml(x, 'ball-banker ' + hitCls(x))).join('')}<span class="plus">拖</span>${r.e.legs.map(x => ballHtml(x, hitCls(x))).join('')}`
+    : r.e.nums.map(x => ballHtml(x, hitCls(x))).join('');
+  return `<div class="result-ticket ${r.wins.length ? 'win' : ''}"><div class="ticket-num">${entryLabel(r.e, i, '組')}</div>
+    <div class="balls">${ballsHtml}</div>
+    <div class="ticket-stats"><span>${label} ${r.combos} 注</span>${status}</div>
+    ${r.wins.length ? `<details open><summary>中獎組合（${r.wins.length} 注）</summary><div class="combo-list">${r.wins.map(w => `<div class="w">${w.c.map(pad).join(' ')}　${TIER_NAME[w.r.tier - 1]} ${w.r.floating ? '浮動' : money(w.r.amount)}</div>`).join('')}</div></details>` : ''}
+  </div>`;
+}
+document.getElementById('runCheckBtn').onclick = () => runCheck();
+document.getElementById('exportCheckBtn').onclick = () => {
+  if (!lastCheckReport) { alert('請先進行核對'); return; }
+  downloadFile(lastCheckReport, `mark_six_check_${stamp()}.txt`, 'text/plain;charset=utf-8');
+};
+
+// ===== 抽珠頁快速核對 =====
+document.getElementById('checkNowBtn').onclick = () => {
+  if (!currentEntries.length) { alert('請先產生號碼'); return; }
+  if (fileSources.length && confirm(`核對頁已載入 ${fileSources.length} 份檔案。\n按「確定」只核對今次抽珠結果（會移除已載入檔案）；按「取消」保留檔案，一齊核對。`)) fileSources = [];
+  setPaste(currentEntries.map(entryText).join('\n'));
+  showPage('pageCheck');
+};
+
+// ===== 導出 =====
+function stamp() {
+  const d = new Date();
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+}
+function exportTxt() {
+  if (!currentEntries.length) { alert('請先產生號碼'); return; }
+  const bets = currentEntries.reduce((s, e) => s + entryCount(e), 0);
+  let c = `六合彩號碼\n產生時間：${new Date().toLocaleString('zh-HK')}\n方式：${({ banker: '膽拖', multiple: '複式', single: '單式' })[currentEntries[0].type] || '單式'}\n合共注數：${bets}　成本：${money(bets * UNIT)}\n${'='.repeat(44)}\n\n`;
+  currentEntries.forEach((e, i) => {
+    if (e.type === 'single') {
+      c += `第 ${String(i + 1).padStart(3, ' ')} 注：  ${e.nums.map(pad).join('  ')}\n`;
+    } else if (e.type === 'multiple') {
+      const combos = expandEntry(e);
+      c += `第 ${i + 1} 組：複式 ${e.nums.map(pad).join(' ')}\n`;
+      c += `    ${e.nums.length} 個號碼，共 ${combos.length} 注，成本 ${money(combos.length * UNIT)}\n`;
+      combos.forEach((cb, j) => c += `    組合 ${j + 1}：${cb.map(pad).join(' ')}\n`);
+      c += '\n';
+    } else {
+      const combos = expandEntry(e);
+      c += `第 ${i + 1} 組 膽拖：膽 ${e.bankers.map(pad).join(' ')} ｜ 腳 ${e.legs.map(pad).join(' ')} ｜ 共 ${combos.length} 注 ${money(combos.length * UNIT)}\n`;
+      combos.forEach((cb, j) => c += `    組合 ${j + 1}：${cb.map(pad).join(' ')}\n`);
+      c += '\n';
+    }
+  });
+  c += `\n${'='.repeat(44)}\n可將此檔案載入「核對號碼」頁對獎\n⚠️ 博彩娛樂，量力而為\n`;
+  downloadFile(c, `mark_six_${stamp()}.txt`, 'text/plain;charset=utf-8');
+}
+function exportCsv() {
+  if (!currentEntries.length) { alert('請先產生號碼'); return; }
+  let csv = '\uFEFF類型,編號,膽碼,號碼/腳,注數,成本\n';
+  currentEntries.forEach((e, i) => {
+    const n = entryCount(e);
+    if (e.type === 'single') csv += `單式,${i + 1},,${e.nums.map(pad).join(' ')},1,${UNIT}\n`;
+    else if (e.type === 'multiple') csv += `複式,${i + 1},,${e.nums.map(pad).join(' ')},${n},${n * UNIT}\n`;
+    else csv += `膽拖,${i + 1},${e.bankers.map(pad).join(' ')},${e.legs.map(pad).join(' ')},${n},${n * UNIT}\n`;
+  });
+  downloadFile(csv, `mark_six_${stamp()}.csv`, 'text/csv;charset=utf-8');
+}
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+document.getElementById('exportTxtBtn').onclick = exportTxt;
+document.getElementById('exportCsvBtn').onclick = exportCsv;
+document.getElementById('generateBtn').onclick = generate;
+document.getElementById('clearBtn').onclick = () => {
+  currentEntries = [];
+  document.getElementById('resultsArea').innerHTML = '<div class="empty-state">按「開始抽珠」產生號碼</div>';
+  document.getElementById('summaryBar').style.display = 'none';
+};
+
+document.getElementById('fetchLatestBtn').onclick = fetchLatestDraw;
+document.getElementById('clearDrawBtn').onclick = () => {
+  document.querySelectorAll('.cd').forEach(el => el.value = '');
+  document.getElementById('cdSpecial').value = '';
+  document.getElementById('drawLabel').value = '';
+  document.getElementById('latestInfo').innerHTML = '';
+  try { localStorage.removeItem('ms_last_draw'); } catch (e) {}
+};
+
+// ===== 號碼池（只喺指定號碼入面抽） =====
+let userPool = new Set();
+try { (JSON.parse(localStorage.getItem('ms_pool') || '[]') || []).forEach(n => { if (n >= 1 && n <= 49) userPool.add(n); }); } catch (e) {}
+function poolCfg(filter) {
+  const cfg = getColorConfig(filter);
+  if (userPool.size) {
+    // 膽碼／心水號碼自動視為號碼池一部份
+    cfg.pool = cfg.pool.filter(x => userPool.has(x) || selectedBankers.has(x));
+    cfg.userPool = true;
+  }
+  return cfg;
+}
+function savePool() { try { localStorage.setItem('ms_pool', JSON.stringify([...userPool])); } catch (e) {} }
+function updatePoolUI() {
+  document.querySelectorAll('#poolSection .banker-btn').forEach(b => {
+    const on = userPool.has(+b.dataset.n);
+    b.classList.toggle('selected', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  const info = document.getElementById('poolInfo');
+  if (!userPool.size) { info.innerHTML = '未揀號碼池：全部 49 個號碼都會參與抽珠。'; }
+  else {
+    const cfg = poolCfg(document.getElementById('colorFilter').value);
+    const nums = [...userPool].sort((a, b) => a - b);
+    const odd = nums.filter(x => x % 2).length, big = nums.filter(x => x >= 25).length;
+    let need = 6;
+    if (mode === 'multiple') need = +document.getElementById('multiCount').value || 7;
+    if (mode === 'banker') need = (+document.getElementById('bankerCount').value) + (+document.getElementById('legCount').value || 0);
+    info.innerHTML = `已揀 <b>${nums.length}</b> 個號碼（奇 ${odd}／偶 ${nums.length - odd}，大 ${big}／小 ${nums.length - big}，${zoneCount(nums)} 個區段）` +
+      (cfg.pool.length !== nums.length ? `，配合顏色條件後可用 <b>${cfg.pool.length}</b> 個` : '') +
+      (cfg.pool.length < need ? `<br><span class="nowin">⚠️ 目前設定每注／每組需要 ${need} 個號碼，號碼池唔夠，請多揀幾個或者放寬顏色條件</span>` : '');
+  }
+}
+function initPoolSection() {
+  const section = document.getElementById('poolSection');
+  for (let i = 1; i <= 49; i++) {
+    const btn = document.createElement('button');
+    btn.className = `banker-btn ball-${getColor(i)}`;
+    btn.textContent = i; btn.dataset.n = i;
+    btn.setAttribute('aria-label', `號碼池 ${i} 號`);
+    btn.onclick = () => { userPool.has(i) ? userPool.delete(i) : userPool.add(i); poolChanged(); };
+    section.appendChild(btn);
+  }
+  document.getElementById('poolAllBtn').onclick = () => { for (let i = 1; i <= 49; i++) userPool.add(i); poolChanged(); };
+  document.getElementById('poolClearBtn').onclick = () => { userPool.clear(); poolChanged(); };
+  document.getElementById('poolInvertBtn').onclick = () => { for (let i = 1; i <= 49; i++) userPool.has(i) ? userPool.delete(i) : userPool.add(i); poolChanged(); };
+  document.getElementById('poolHotBtn').onclick = () => {
+    if (!DRAWS.length) { alert('要放上 GitHub、載入到歷史資料先用到呢個功能'); return; }
+    const r = statRangeDraws();
+    const cnt = Array(50).fill(0); r.forEach(d => d.n.forEach(x => cnt[x]++));
+    const top = Array.from({ length: 49 }, (_, i) => i + 1).sort((a, b) => cnt[b] - cnt[a] || a - b).slice(0, 15);
+    userPool = new Set(top); poolChanged();
+  };
+  updatePoolUI();
+}
+function poolChanged() { savePool(); buildLegOptions(); buildMultiOptions(); updatePoolUI(); }
+
+// ===== 歷史資料（雲端 data/draws.csv） =====
+let DRAWS = [];            // 全部期數，舊 → 新
+const drawOrder = id => { const yy = +id.slice(0, 2); return (yy >= 93 ? 1900 + yy : 2000 + yy) * 1000 + +id.slice(3); };
+const is49 = d => d.date ? d.date >= '2002-07-04' : drawOrder(d.id) >= 2003000;
+async function loadDrawsCsv() {
+  const st = document.getElementById('statStatus');
+  try {
+    const res = await fetch('data/draws.csv?_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const list = [];
+    (await res.text()).split(/\r?\n/).slice(1).forEach(line => {
+      const c = line.split(',');
+      if (c.length < 9 || !/^\d{2}\/\d{3}$/.test(c[0])) return;
+      const n = c.slice(2, 8).map(Number), sp = +c[8];
+      if ([...n, sp].some(x => !(x >= 1 && x <= 49))) return;
+      list.push({ id: c[0], date: c[1], n, sp });
+    });
+    list.sort((a, b) => drawOrder(a.id) - drawOrder(b.id));
+    DRAWS = list.filter(is49);
+    if (!DRAWS.length) throw new Error('檔案冇資料');
+    // 用雲端資料取代內置和值統計
+    const last = DRAWS[DRAWS.length - 1];
+    HIST_BASE_SUM = {};
+    DRAWS.forEach(d => { const s = d.n.reduce((a, b) => a + b, 0); HIST_BASE_SUM[s] = (HIST_BASE_SUM[s] || 0) + 1; });
+    HIST_BASE_DRAWS = DRAWS.length;
+    HIST_BASE_KEY = drawKey(last.id);
+    HIST_BASE_LABEL = `${last.id}${last.date ? '（' + last.date + '）' : ''}`;
+    HIST_SRC = '雲端';
+    refreshHistUI();
+    st.innerHTML = `☁️ 已載入雲端歷史資料：2002 年 7 月至今共 <b>${DRAWS.length.toLocaleString('en-US')}</b> 期，最新 <b>${escapeHtml(HIST_BASE_LABEL)}</b>。每次開獎後會自動更新。`;
+    renderStats();
+  } catch (e) {
+    st.innerHTML = `<span class="nowin">未能載入歷史資料（${escapeHtml(e.message)}）。</span><br>分析功能需要將本網頁放上 GitHub，並完成第一次歷史資料下載。直接開啟 HTML 檔案時唔會有分析資料。`;
+    document.getElementById('poolHotBtn').disabled = true;
+  }
+}
+function statRangeDraws() {
+  const v = document.getElementById('statRange').value;
+  return v === 'all' ? DRAWS : DRAWS.slice(-(+v));
+}
+
+// ---------- 冷熱號同遺漏 ----------
+function renderHotCold() {
+  const r = statRangeDraws();
+  const withSp = document.getElementById('hcSpecial').checked;
+  const cnt = Array(50).fill(0), gap = Array(50).fill(null);
+  r.forEach(d => { d.n.forEach(x => cnt[x]++); if (withSp) cnt[d.sp]++; });
+  for (let i = DRAWS.length - 1, k = 0; i >= 0; i--, k++) {
+    const d = DRAWS[i];
+    d.n.forEach(x => { if (gap[x] === null) gap[x] = k; });
+    if (withSp && gap[d.sp] === null) gap[d.sp] = k;
+  }
+  const nums = Array.from({ length: 49 }, (_, i) => i + 1);
+  const byCnt = [...nums].sort((a, b) => cnt[b] - cnt[a] || a - b);
+  const hot = new Set(byCnt.slice(0, 6)), cold = new Set(byCnt.slice(-6));
+  const sort = document.getElementById('hcSort').value;
+  const order = sort === 'cnt' ? byCnt : sort === 'gap' ? [...nums].sort((a, b) => (gap[b] ?? 1e9) - (gap[a] ?? 1e9) || a - b) : nums;
+  const max = Math.max(...cnt.slice(1)) || 1;
+  const expect = r.length * (withSp ? 7 : 6) / 49;
+  document.getElementById('hcSummary').innerHTML =
+    `範圍 ${r.length} 期，每個號碼平均應出現約 <b>${expect.toFixed(1)}</b> 次。` +
+    `最熱：${byCnt.slice(0, 6).map(x => `${pad(x)}（${cnt[x]}）`).join('、')}<br>` +
+    `最冷：${byCnt.slice(-6).reverse().map(x => `${pad(x)}（${cnt[x]}）`).join('、')}`;
+  document.getElementById('hcGrid').innerHTML = order.map(x => `
+    <div class="hc-cell ${hot.has(x) ? 'hot' : cold.has(x) ? 'cold' : ''}" title="${x} 號：範圍內 ${cnt[x]} 次，遺漏 ${gap[x] ?? '—'} 期">
+      ${ballHtml(x, 'sm')}
+      <b>${cnt[x]} 次</b>
+      <div class="hc-bar"><i style="width:${(cnt[x] / max * 100).toFixed(1)}%"></i></div>
+      <span>遺漏 ${gap[x] ?? '—'}</span>
+    </div>`).join('');
+}
+
+// ---------- 分佈統計 ----------
+function hyper(K, N, n, k) { return nCr(K, k) * nCr(N - K, n - k) / nCr(N, n); }
+function renderDist() {
+  const r = statRangeDraws(), T = r.length || 1;
+  const odds = Array(7).fill(0), bigs = Array(7).fill(0), zones = Array(6).fill(0), runs = Array(7).fill(0);
+  const colorCombo = new Map();
+  r.forEach(d => {
+    odds[d.n.filter(x => x % 2).length]++;
+    bigs[d.n.filter(x => x >= 25).length]++;
+    zones[zoneCount(d.n)]++;
+    runs[maxRun(d.n)]++;
+    const c = `紅${d.n.filter(x => getColor(x) === 'red').length} 藍${d.n.filter(x => getColor(x) === 'blue').length} 綠${d.n.filter(x => getColor(x) === 'green').length}`;
+    colorCombo.set(c, (colorCombo.get(c) || 0) + 1);
+  });
+  // 理論比例（由全部 13,983,816 個組合計出）
+  const thZone = Array(6).fill(0), thRun = Array(7).fill(0), thColor = new Map();
+  if (!renderDist.cache) {
+    // 只計一次：用抽樣 20 萬個組合估算（區段、連號、顏色）
+    const S = 200000;
+    for (let i = 0; i < S; i++) {
+      const a = shuffle(Array.from({ length: 49 }, (_, k) => k + 1)).slice(0, 6);
+      thZone[zoneCount(a)]++; thRun[maxRun(a)]++;
+      const c = `紅${a.filter(x => getColor(x) === 'red').length} 藍${a.filter(x => getColor(x) === 'blue').length} 綠${a.filter(x => getColor(x) === 'green').length}`;
+      thColor.set(c, (thColor.get(c) || 0) + 1);
+    }
+    renderDist.cache = { zone: thZone.map(v => v / S), run: thRun.map(v => v / S), color: new Map([...thColor].map(([k, v]) => [k, v / S])) };
+  }
+  const th = renderDist.cache;
+  const row = (label, actual, theory) => {
+    const p = actual / T;
+    return `<tr><td>${label}</td><td><div class="dbar"><i style="width:${Math.min(100, p * 100 / 0.6 * 1).toFixed(1)}%"></i><s style="left:${Math.min(99.5, theory * 100 / 0.6).toFixed(1)}%"></s></div></td>` +
+      `<td class="num">${(p * 100).toFixed(1)}%｜理論 ${(theory * 100).toFixed(1)}%</td></tr>`;
+  };
+  const table = (title, rows) => `<div class="sub-h">${title}</div><table class="dist-table">${rows.join('')}</table>`;
+  let h = '';
+  h += table('奇偶（奇數個數）', [6, 5, 4, 3, 2, 1, 0].map(k => row(`${k} 奇 ${6 - k} 偶`, odds[k], hyper(25, 49, 6, k))));
+  h += table('大小（25 或以上為大）', [6, 5, 4, 3, 2, 1, 0].map(k => row(`${k} 大 ${6 - k} 小`, bigs[k], hyper(25, 49, 6, k))));
+  h += table('分佈幾多個區段（1–9／10–19／20–29／30–39／40–49）', [5, 4, 3, 2, 1].map(k => row(`${k} 個區段`, zones[k], th.zone[k])));
+  h += table('最長連號', [1, 2, 3, 4].map(k => row(k === 1 ? '冇連號' : `${k} 個連號${k === 4 ? '或以上' : ''}`, k === 4 ? runs.slice(4).reduce((a, b) => a + b, 0) : runs[k], k === 4 ? th.run.slice(4).reduce((a, b) => a + b, 0) : th.run[k])));
+  const topColors = [...colorCombo].sort((a, b) => b[1] - a[1]).slice(0, 8);
+  h += table('最常見顏色組合（頭 8 個）', topColors.map(([k, v]) => row(k, v, th.color.get(k) || 0)));
+  h += `<div class="hint" style="margin-top:8px;">範圍 ${r.length} 期。比例條最長代表 60%。期數少嘅時候，實際比例同理論有偏差係正常現象。</div>`;
+  document.getElementById('distArea').innerHTML = h;
+}
+
+// ---------- 和值走勢 ----------
+function renderSumChart() {
+  const wrap = document.getElementById('sumChartWrap'), tip = document.getElementById('sumTip');
+  const r = statRangeDraws().slice(-200);
+  wrap.querySelectorAll('svg').forEach(x => x.remove());
+  if (!r.length) return;
+  const sums = r.map(d => d.n.reduce((a, b) => a + b, 0));
+  const ma = sums.map((_, i) => i < 9 ? null : sums.slice(i - 9, i + 1).reduce((a, b) => a + b, 0) / 10);
+  const W = 700, H = 280, L = 40, R = 10, Tp = 12, B = 26;
+  const lo = Math.min(60, ...sums), hi = Math.max(240, ...sums);
+  const x = i => L + (r.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (r.length - 1));
+  const y = v => Tp + (hi - v) * (H - Tp - B) / (hi - lo);
+  const path = arr => arr.map((v, i) => v === null ? '' : `${arr[i - 1] == null ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+  let grid = '';
+  for (let v = Math.ceil(lo / 50) * 50; v <= hi; v += 50)
+    grid += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,0.08)"/><text x="${L - 6}" y="${y(v) + 4}" fill="#8fa0b5" font-size="11" text-anchor="end">${v}</text>`;
+  const ticks = [0, Math.floor((r.length - 1) / 2), r.length - 1].filter((v, i, a) => a.indexOf(v) === i)
+    .map(i => `<text x="${x(i)}" y="${H - 6}" fill="#8fa0b5" font-size="11" text-anchor="${i === 0 ? 'start' : i === r.length - 1 ? 'end' : 'middle'}">${r[i].id}</text>`).join('');
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="最近 ${r.length} 期和值走勢">
+    ${grid}
+    <line x1="${L}" x2="${W - R}" y1="${y(150)}" y2="${y(150)}" stroke="#8fa0b5" stroke-dasharray="5 4" stroke-width="1.5"/>
+    <path d="${path(sums)}" fill="none" stroke="#8fb8ff" stroke-width="1.5" stroke-linejoin="round" opacity="0.85"/>
+    <path d="${path(ma)}" fill="none" stroke="#ffd700" stroke-width="2" stroke-linejoin="round"/>
+    ${ticks}
+    <line id="sumCross" x1="0" x2="0" y1="${Tp}" y2="${H - B}" stroke="rgba(255,255,255,0.4)" visibility="hidden"/>
+    <circle id="sumDot" r="4.5" fill="#8fb8ff" stroke="#16213e" stroke-width="2" visibility="hidden"/>
+    <rect x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent" id="sumHit"/>
+  </svg>`;
+  wrap.insertAdjacentHTML('afterbegin', svg);
+  const el = wrap.querySelector('svg'), cross = el.querySelector('#sumCross'), dot = el.querySelector('#sumDot');
+  const move = ev => {
+    const pt = ev.touches ? ev.touches[0] : ev;
+    const box = el.getBoundingClientRect();
+    const sx = (pt.clientX - box.left) * W / box.width;
+    const i = Math.max(0, Math.min(r.length - 1, Math.round((sx - L) / ((W - L - R) / Math.max(1, r.length - 1)))));
+    cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('visibility', 'visible');
+    dot.setAttribute('cx', x(i)); dot.setAttribute('cy', y(sums[i])); dot.setAttribute('visibility', 'visible');
+    tip.innerHTML = `${r[i].id}${r[i].date ? '（' + r[i].date + '）' : ''}<br>和值 <b>${sums[i]}</b>${ma[i] ? '｜10 期平均 ' + ma[i].toFixed(1) : ''}<br>${r[i].n.map(pad).join(' ')} + ${pad(r[i].sp)}`;
+    tip.style.display = 'block';
+    const px = x(i) * box.width / W;
+    tip.style.left = Math.max(0, Math.min(box.width - tip.offsetWidth, px - tip.offsetWidth / 2)) + 'px';
+    tip.style.top = '0px';
+  };
+  const leave = () => { tip.style.display = 'none'; cross.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden'); };
+  el.addEventListener('mousemove', move); el.addEventListener('mouseleave', leave);
+  el.addEventListener('touchstart', move, { passive: true }); el.addEventListener('touchmove', move, { passive: true });
+  el.addEventListener('touchend', () => setTimeout(leave, 1500));
+  const avg = sums.reduce((a, b) => a + b, 0) / sums.length;
+  const inMid = sums.filter(s => s >= 120 && s <= 180).length;
+  document.getElementById('sumStats').innerHTML = `圖表顯示最近 ${r.length} 期（最多 200 期）。平均和值 <b>${avg.toFixed(1)}</b>（理論 150），最高 ${Math.max(...sums)}、最低 ${Math.min(...sums)}；` +
+    `和值喺 120–180 之間嘅有 ${inMid} 期（${(inMid / sums.length * 100).toFixed(1)}%）。`;
+}
+
+// ---------- 回測 ----------
+function runBacktest() {
+  const out = document.getElementById('btResult');
+  if (!DRAWS.length) { out.innerHTML = '<span class="nowin">未有歷史資料，未能回測。</span>'; return; }
+  const { entries, errors } = parseTickets(document.getElementById('btInput').value);
+  if (!entries.length) { out.innerHTML = `<span class="nowin">未讀到任何號碼${errors.length ? '：' + escapeHtml(errors.slice(0, 2).join('；')) : ''}</span>`; return; }
+  const r = statRangeDraws();
+  const combos = entries.flatMap(expandEntry);
+  if (combos.length * r.length > 3000000) { out.innerHTML = '<span class="nowin">注數 × 期數太多，請減少注數或者縮細分析範圍。</span>'; return; }
+  const tiers = Array(8).fill(0);
+  let prize = 0, floatingHits = 0, drawsWon = 0;
+  const best = [];
+  r.forEach(d => {
+    let won = false;
+    combos.forEach(c => {
+      const p = prizeFor(c, { n: d.n, s: d.sp, p: null });
+      if (p.tier) { tiers[p.tier]++; prize += p.amount; won = true; if (p.floating) floatingHits++; if (p.tier <= 5) best.push({ d, c, p }); }
+    });
+    if (won) drawsWon++;
+  });
+  const cost = combos.length * UNIT * r.length, net = prize - cost;
+  best.sort((a, b) => a.p.tier - b.p.tier || drawOrder(b.d.id) - drawOrder(a.d.id));
+  out.innerHTML = `
+    <div class="hint">${describe(entries)}；範圍 ${r.length} 期（${r[0].id} 至 ${r[r.length - 1].id}）${errors.length ? `<br><span class="nowin">${errors.length} 行未能讀取：${escapeHtml(errors.slice(0, 2).join('；'))}</span>` : ''}</div>
+    <div class="bt-grid">
+      <div class="bt-tile"><div>總成本</div><b>${money(cost)}</b></div>
+      <div class="bt-tile"><div>固定獎金（四至七獎）</div><b>${money(prize)}</b></div>
+      <div class="bt-tile"><div>淨${net >= 0 ? '賺' : '蝕'}</div><b class="${net >= 0 ? 'pos' : 'neg'}">${money(Math.abs(net))}</b></div>
+      <div class="bt-tile"><div>有中獎嘅期數</div><b>${drawsWon} / ${r.length}</b></div>
+    </div>
+    <table class="prize"><tr><th>獎項</th><th>條件</th><th>次數</th></tr>
+      ${TIER_NAME.map((t, i) => `<tr><td>${t}</td><td>${TIER_RULE[i]}</td><td>${tiers[i + 1]}</td></tr>`).join('')}
+    </table>
+    ${floatingHits ? `<div class="hint" style="margin-top:8px;">🎉 有 ${floatingHits} 次中咗頭、二或三獎！呢啲係浮動獎金，冇計入上面嘅獎金。</div>` : ''}
+    ${best.length ? `<div class="sub-h">中四獎或以上</div><div class="combo-list">${best.slice(0, 30).map(b => `<div class="w">${b.d.id} ${b.c.map(pad).join(' ')}　${TIER_NAME[b.p.tier - 1]}</div>`).join('')}</div>` : ''}
+    <div class="hint" style="margin-top:8px;">回測只係計返過去嘅結果，唔代表將來表現。</div>`;
+}
+
+function renderStats() {
+  if (!DRAWS.length) return;
+  renderHotCold(); renderDist(); renderSumChart();
+}
+document.getElementById('statRange').onchange = () => { renderStats(); if (document.getElementById('btResult').innerHTML) runBacktest(); };
+document.getElementById('hcSort').onchange = renderHotCold;
+document.getElementById('hcSpecial').onchange = renderHotCold;
+document.getElementById('btRunBtn').onclick = runBacktest;
+document.getElementById('btUseCurrentBtn').onclick = () => {
+  let entries = currentEntries;
+  if (!entries.length) { try { entries = JSON.parse(localStorage.getItem('ms_last_entries') || '[]'); } catch (e) {} }
+  if (!entries.length) { alert('暫時未有抽珠結果，請先到「抽珠」頁產生號碼'); return; }
+  document.getElementById('btInput').value = entries.map(entryText).join('\n');
+};
+
+// ===== 初始化 =====
+initBankerSection();
+buildLegOptions();
+buildMultiOptions();
+updateSumUI();
+initCheckPage();
+initPoolSection();
+['multiCount', 'legCount', 'bankerCount'].forEach(id => document.getElementById(id).addEventListener('change', updatePoolUI));
+loadDrawsCsv();
+setTimeout(() => autoUpdateHist(false), 800);   // 開啟網頁時自動檢查有冇新一期
+restoreFileSources();
+try { const pt = localStorage.getItem('ms_paste'); if (pt) { setPaste(pt); } else refreshLoaded(); } catch (e) { refreshLoaded(); }
+try {
+  const saved = JSON.parse(localStorage.getItem('ms_last_entries') || '[]');
+  if (saved.length) { currentEntries = saved; renderEntries(saved); }
+} catch (e) {}
 </script>
-</body>
-</html>
+</body></html>
