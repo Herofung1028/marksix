@@ -1823,19 +1823,12 @@ function renderDist() {
     colorCombo.set(c, (colorCombo.get(c) || 0) + 1);
   });
   // 理論比例（由全部 13,983,816 個組合計出）
-  const thZone = Array(6).fill(0), thRun = Array(7).fill(0), thColor = new Map();
-  if (!renderDist.cache) {
-    // 只計一次：用抽樣 20 萬個組合估算（區段、連號、顏色）
-    const S = 200000;
-    for (let i = 0; i < S; i++) {
-      const a = shuffle(Array.from({ length: 49 }, (_, k) => k + 1)).slice(0, 6);
-      thZone[zoneCount(a)]++; thRun[maxRun(a)]++;
-      const c = `紅${a.filter(x => getColor(x) === 'red').length} 藍${a.filter(x => getColor(x) === 'blue').length} 綠${a.filter(x => getColor(x) === 'green').length}`;
-      thColor.set(c, (thColor.get(c) || 0) + 1);
-    }
-    renderDist.cache = { zone: thZone.map(v => v / S), run: thRun.map(v => v / S), color: new Map([...thColor].map(([k, v]) => [k, v / S])) };
-  }
-  const th = renderDist.cache;
+  // 理論比例：由全部 13,983,816 個組合準確計出（預先計好，免得手機要計好耐）
+  const TH_TOTAL = 13983816;
+  const TH_ZONE = [0, 924, 337392, 4207500, 7458000, 1980000];
+  const TH_RUN = [0, 7059052, 6257790, 623414, 41624, 1892, 44];
+  const TH_COLOR = {"紅2 藍2 綠2": 1958400, "紅3 藍2 綠1": 1305600, "紅2 藍3 綠1": 1218560, "紅4 藍2 綠0": 285600, "紅3 藍3 綠0": 380800, "紅2 藍4 綠0": 247520, "紅3 藍1 綠2": 1305600, "紅2 藍1 綠3": 1218560, "紅4 藍1 綠1": 609280, "紅5 藍1 綠0": 99008, "紅4 藍0 綠2": 285600, "紅3 藍0 綠3": 380800, "紅2 藍0 綠4": 247520, "紅5 藍0 綠1": 99008, "紅6 藍0 綠0": 12376, "紅1 藍3 綠2": 1142400, "紅1 藍2 綠3": 1142400, "紅1 藍4 綠1": 495040, "紅1 藍5 綠0": 74256, "紅1 藍1 綠4": 495040, "紅1 藍0 綠5": 74256, "紅0 藍4 綠2": 218400, "紅0 藍3 綠3": 313600, "紅0 藍2 綠4": 218400, "紅0 藍5 綠1": 69888, "紅0 藍6 綠0": 8008, "紅0 藍1 綠5": 69888, "紅0 藍0 綠6": 8008};
+  const th = { zone: TH_ZONE.map(v => v / TH_TOTAL), run: TH_RUN.map(v => v / TH_TOTAL), color: new Map(Object.entries(TH_COLOR).map(([k, v]) => [k, v / TH_TOTAL])) };
   const row = (label, actual, theory) => {
     const p = actual / T;
     return `<tr><td>${label}</td><td><div class="dbar"><i style="width:${Math.min(100, p * 100 / 0.6 * 1).toFixed(1)}%"></i><s style="left:${Math.min(99.5, theory * 100 / 0.6).toFixed(1)}%"></s></div></td>` +
