@@ -196,6 +196,8 @@ async function backupHistory() {
 
 // ---------- 主程式 ----------
 const backfill = process.argv[2] === 'backfill';
+const META = 'data/meta.json';
+let source = '';   // 今次成功用咗邊個來源
 const map = readCsv();
 const before = map.size;
 let added = 0;
@@ -207,10 +209,10 @@ const merge = list => list.forEach(d => {
 if (backfill) {
   console.log('▶ 下載全部歷史資料…');
   let ok = false;
-  try { merge(await hkjcRange(new Date(Date.UTC(1993, 0, 1)), new Date())); ok = true; }
+  try { merge(await hkjcRange(new Date(Date.UTC(1993, 0, 1)), new Date())); ok = true; source = '馬會'; }
   catch (e) { console.log('⚠ 馬會接口失敗：' + e.message); }
   if (!ok || map.size < 3000) {
-    try { const list = await backupHistory(); console.log(`  後備來源：${list.length} 期`); merge(list); }
+    try { const list = await backupHistory(); console.log(`  後備來源：${list.length} 期`); merge(list); source = source ? source + '+後備' : '後備'; }
     catch (e) { console.log('⚠ 後備來源失敗：' + e.message); }
   }
 } else {
@@ -218,10 +220,11 @@ if (backfill) {
   try {
     const to = new Date(), from = new Date(Date.now() - 45 * 86400000);
     merge(await hkjc({ lastNDraw: null, startDate: ymd(from), endDate: ymd(to), drawType: 'All' }));
+    source = '馬會';
   } catch (e) {
     console.log('⚠ 馬會接口失敗，改用公開接口：' + e.message);
     const d = await latestApi();
-    if (d) merge([d]);
+    if (d) { merge([d]); source = '公開接口'; }
   }
 }
 
@@ -234,3 +237,20 @@ console.log(`✔ 原有 ${before} 期，新加入 ${added} 期，共 ${map.size}
 const chk = sorted.filter(d => d.date >= '2002-07-04' && sortKey(d) <= 2026118);
 if (chk.length) console.log(`ℹ 自我檢查：2002-07-04 至 26/118 共 ${chk.length} 期（應為 3395）`);
 if (!map.size) { console.log('✘ 未能取得任何資料'); process.exit(1); }
+
+// 系統狀態：網頁頂部顯示「資料更新時間」同「最後檢查時間」
+// checkedAt 每次執行都會更新（即使冇新一期），咁使用者可以分辨「未開獎」定「系統停咗」
+let oldMeta = {};
+try { oldMeta = JSON.parse(fs.readFileSync(META, 'utf8')) || {}; } catch (e) {}
+const nowIso = new Date().toISOString();
+const meta = {
+  checkedAt: nowIso,
+  updatedAt: changed || !oldMeta.updatedAt ? nowIso : oldMeta.updatedAt,
+  latestId: last ? last.id : '',
+  latestDate: last ? last.date : '',
+  total: map.size,
+  ok: !!source,
+  source: source || '全部來源失敗',
+};
+fs.writeFileSync(META, JSON.stringify(meta, null, 2) + '\n');
+console.log(`ℹ 狀態：${JSON.stringify(meta)}`);
