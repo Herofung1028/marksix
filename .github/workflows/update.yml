@@ -32,7 +32,8 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data
-            git commit -m "更新六合彩結果"
+            if git diff --cached --quiet -- data/draws.csv; then MSG="更新檢查時間"; else MSG="更新六合彩結果"; fi
+            git commit -m "$MSG"
             git push
           else
             echo "冇新資料"
