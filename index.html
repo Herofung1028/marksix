@@ -226,6 +226,19 @@
   .modal h3 { font-size: 1.05rem; margin-bottom: 10px; color: var(--accent); }
   .modal p { font-size: 0.84rem; color: #cbd5e1; margin-bottom: 10px; line-height: 1.6; }
 
+  /* 資料庫狀態列（最外層） */
+  .db-status {
+    display: flex; align-items: flex-start; gap: 8px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 8px 11px; margin-bottom: 10px;
+    font-size: 0.8rem; color: var(--muted); line-height: 1.5;
+  }
+  .db-status b { color: var(--text); font-weight: 600; }
+  .db-dot { width: 9px; height: 9px; border-radius: 50%; background: #64748b; flex-shrink: 0; margin-top: 5px; }
+  .db-status.ok .db-dot { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+  .db-status.warn .db-dot { background: #f59e0b; }
+  .db-status.err .db-dot { background: #ef4444; }
+  .db-status.warn, .db-status.err { border-color: rgba(245,158,11,0.35); }
+
   footer { text-align: center; padding: 16px 8px; color: var(--muted); font-size: 0.78rem; margin-top: 12px; }
   footer a { color: #60a5fa; text-decoration: none; }
 
@@ -247,6 +260,11 @@
     <button class="btn btn-ghost" id="helpBtn">ℹ️ 規則說明</button>
   </header>
 
+  <div class="db-status" id="dbStatus" role="status">
+    <span class="db-dot"></span>
+    <div id="dbStatusText">正在檢查資料庫…</div>
+  </div>
+
   <div class="tabs">
     <button class="tab active" data-page="pageDraw">🎲 抽珠</button>
     <button class="tab" data-page="pageCheck">✅ 對獎</button>
@@ -260,12 +278,13 @@
         <button class="seg-btn active" data-mode="single">單式</button>
         <button class="seg-btn" data-mode="multiple">複式</button>
         <button class="seg-btn" data-mode="banker">膽拖</button>
+        <button class="seg-btn" data-mode="ai">🤖 AI抽珠</button>
       </div>
 
       <div class="controls-grid">
         <div class="control-group">
-          <label id="numTicketsLabel">產生注數</label>
-          <input type="number" id="numTickets" value="5" min="1" max="100" inputmode="numeric">
+          <label id="numTicketsLabel">產生注數（最多 1,000）</label>
+          <input type="number" id="numTickets" value="5" min="1" max="1000" inputmode="numeric">
         </div>
         <div class="control-group">
           <label>顏色組合</label>
@@ -302,8 +321,86 @@
             <option value="0-6">0大 6小</option>
           </select>
         </div>
-        <div class="control-group single-only">
-          <label>和值篩選（6 碼總和）</label>
+        <!-- 複式專屬（奇偶平衡、大小平衡膽拖亦適用；區段分佈三種玩法通用） -->
+        <div class="control-group multi-only" style="display:none;">
+          <label>複式號碼數</label>
+          <select id="multiCount"></select>
+        </div>
+        <div class="control-group multi-banker" style="display:none;">
+          <label>奇偶平衡</label>
+          <select id="multiOddEven">
+            <option value="any" selected>不限</option>
+            <option value="balanced">奇偶平均</option>
+            <option value="odd">奇數較多</option>
+            <option value="even">偶數較多</option>
+          </select>
+        </div>
+        <div class="control-group multi-banker" style="display:none;">
+          <label>大小平衡（25+ 為大）</label>
+          <select id="multiBigSmall">
+            <option value="any" selected>不限</option>
+            <option value="balanced">大小平均</option>
+            <option value="big">大數較多</option>
+            <option value="small">小數較多</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>區段分佈</label>
+          <select id="multiSpread">
+            <option value="any" selected>不限</option>
+            <option value="smart">分散區段、少連號（最少 4 區段）</option>
+            <option value="zones">五區段皆有號碼</option>
+          </select>
+        </div>
+
+
+        <!-- AI 抽珠專屬 -->
+        <div class="control-group ai-only" style="display:none;">
+          <label>AI 策略</label>
+          <select id="aiStrategy">
+            <option value="mix" selected>綜合趨勢</option>
+            <option value="hot">追熱門（出得多）</option>
+            <option value="momentum">近期走勢（最近 10 期）</option>
+            <option value="cold">追遺漏回補（耐冇出）</option>
+            <option value="follow">延續上期（重號、鄰號）</option>
+          </select>
+        </div>
+        <div class="control-group ai-only" style="display:none;">
+          <label>參考最近幾多期</label>
+          <select id="aiRange">
+            <option value="10">10 期</option><option value="20">20 期</option><option value="30" selected>30 期</option>
+            <option value="50">50 期</option><option value="100">100 期</option>
+            <option value="newmc">🆕 使用新機器嘅趨勢資料（2026-05-05 至今）</option>
+          </select>
+        </div>
+        <div class="control-group ai-only" style="display:none;">
+          <label>形態</label>
+          <select id="aiPattern">
+            <option value="on" selected>跟歷史常見形態</option>
+            <option value="off">不限</option>
+          </select>
+        </div>
+        <div class="control-group ai-only" style="display:none;justify-content:flex-end;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="aiCycle" checked style="width:auto;"> 配合聰明組合（循環不重複）
+          </label>
+        </div>
+
+        <!-- 膽拖專屬 -->
+        <div class="control-group banker-only" style="display:none;">
+          <label>膽數</label>
+          <select id="bankerCount">
+            <option value="1">1 膽</option><option value="2" selected>2 膽</option>
+            <option value="3">3 膽</option><option value="4">4 膽</option><option value="5">5 膽</option>
+          </select>
+        </div>
+        <div class="control-group banker-only" style="display:none;">
+          <label>腳數</label>
+          <select id="legCount"></select>
+        </div>
+
+        <div class="control-group">
+          <label id="sumModeLabel">和值篩選（6 碼總和）</label>
           <select id="sumMode">
             <option value="any">不限</option>
             <option value="exact">指定和值（21–279）</option>
@@ -326,51 +423,6 @@
             <span class="hint">至</span>
             <input type="number" id="sumMax" value="170" min="21" max="279" inputmode="numeric">
           </div>
-        </div>
-
-        <!-- 複式專屬 -->
-        <div class="control-group multi-only" style="display:none;">
-          <label>複式號碼數</label>
-          <select id="multiCount"></select>
-        </div>
-        <div class="control-group multi-only" style="display:none;">
-          <label>聰明奇偶</label>
-          <select id="multiOddEven">
-            <option value="any">不限</option>
-            <option value="balanced" selected>奇偶平均</option>
-            <option value="odd">奇數較多</option>
-            <option value="even">偶數較多</option>
-          </select>
-        </div>
-        <div class="control-group multi-only" style="display:none;">
-          <label>聰明大小</label>
-          <select id="multiBigSmall">
-            <option value="any">不限</option>
-            <option value="balanced" selected>大小平均</option>
-            <option value="big">大數較多</option>
-            <option value="small">小數較多</option>
-          </select>
-        </div>
-        <div class="control-group multi-only" style="display:none;">
-          <label>聰明分佈</label>
-          <select id="multiSpread">
-            <option value="any">不限</option>
-            <option value="smart" selected>分散區段、少連號</option>
-            <option value="zones">五區段皆有號碼</option>
-          </select>
-        </div>
-
-        <!-- 膽拖專屬 -->
-        <div class="control-group banker-only" style="display:none;">
-          <label>膽數</label>
-          <select id="bankerCount">
-            <option value="1">1 膽</option><option value="2" selected>2 膽</option>
-            <option value="3">3 膽</option><option value="4">4 膽</option><option value="5">5 膽</option>
-          </select>
-        </div>
-        <div class="control-group banker-only" style="display:none;">
-          <label>腳數</label>
-          <select id="legCount"></select>
         </div>
       </div>
 
@@ -402,6 +454,12 @@
           </div>
         </details>
       </div>
+    </div>
+
+    <!-- AI 分析 -->
+    <div class="panel ai-only" style="display:none;">
+      <div class="panel-head"><h2>🤖 AI 趨勢分析</h2></div>
+      <div id="aiInsight"></div>
     </div>
 
     <!-- 整合號碼盤（膽碼 / 自訂號碼池共用） -->
@@ -438,10 +496,10 @@
     <div class="action-bar">
       <button class="btn btn-primary" id="generateBtn">🎲 開始抽珠</button>
       <button class="btn btn-secondary" id="checkNowBtn">✅ 快速對獎</button>
-      <button class="btn btn-secondary" id="exportTxtBtn">📄 TXT</button>
-      <button class="btn btn-secondary" id="exportCsvBtn">📊 CSV</button>
+      <button class="btn btn-secondary" id="exportBothBtn">📥 下載號碼</button>
       <button class="btn btn-ghost" id="clearBtn">清除</button>
     </div>
+    <div class="hint" style="margin:-6px 2px 14px;">📥 一次過下載兩個檔：<b>📄 TXT 係俾人睇嘅</b>（逐注列出，方便打印、傳俾朋友、去投注站照填）；<b>📊 CSV 係對獎用嘅</b>（檔案細，喺「對獎」頁匯入，瀏覽器記得住）。</div>
 
     <!-- 結果顯示區 -->
     <div class="panel">
@@ -519,6 +577,7 @@
             <option value="100" selected>最近 100 期</option>
             <option value="200">最近 200 期</option>
             <option value="500">最近 500 期</option>
+            <option value="newmc">🆕 新攪珠機至今（2026-05-05 起）</option>
             <option value="all">2002 年至今全部（49 碼制）</option>
           </select>
         </div>
@@ -598,9 +657,12 @@
       <h3>🎱 玩法與篩選說明</h3>
       <button class="btn btn-ghost btn-small" id="closeHelpBtn">✕</button>
     </div>
+    <p><b>🔁 聰明組合（所有玩法預設）：</b>每注照樣隨機抽，但抽過嘅號碼會擺埋一邊，要等號碼池全部 49 個（或你選定嘅號碼池／顏色範圍）都出過一次，先開始新一輪。心水膽碼每注必出，所以唔計入循環。奇偶、大小、和值、顏色等係附加條件；如條件同循環有衝突，會以條件優先，並喺結果顯示提早重複咗幾多個號碼。每次按「開始抽珠」都由第 1 輪重新開始。</p>
+    <p><b>通用條件（三種玩法都適用）：</b>顏色、區段分佈（1–9、10–19、20–29、30–39、40–49 五個區段；「分散區段、少連號」= 最少 4 個區段、最多 2 個連號，8 碼或以上要 5 個區段、最多 3 個連號）、和值。複式同膽拖用「平均和值」＝ 全部號碼總和 × 6 ÷ 號碼數目，所以同單式一樣喺 21–279 之間。膽拖嘅奇偶、大小、和值、區段都計晒膽同腳全部號碼。</p>
     <p><b>單式：</b>每注 6 個號碼，支援奇偶、大小（25+ 為大）、顏色及總和值篩選。</p>
-    <p><b>複式：</b>每組選 7–15 個號碼，系統自動展開所有 6 碼組合（如 8 碼 = 28 注）。「聰明分佈」會自動平衡奇偶大小並分散於 1–9、10–19、20–29、30–39、40–49 五個區段，避免長連號。</p>
+    <p><b>複式：</b>每組選 7–15 個號碼，系統自動展開所有 6 碼組合（如 8 碼 = 28 注）。可另加「奇偶平衡」「大小平衡」。</p>
     <p><b>膽拖：</b>選定 1–5 個「膽碼」每注必出，搭配「腳碼」展開所有組合（如 2 膽 5 腳 = 5 注）。</p>
+    <p><b>🤖 AI抽珠：</b>用最近幾期（或「🆕 使用新機器嘅趨勢資料」：馬會 2026-05-05 起用第五代攪珠機，只計新機開出嘅期數）攪珠結果計每個號碼嘅「偏好度」：熱門（出得多）、近期走勢（最近 10 期）、遺漏（耐冇出）、延續上期（重號、鄰號），偏好高嘅號碼較易抽中。可選擇跟歷史常見嘅奇偶、大小、和值形態，亦照用聰明組合。「AI 準唔準？」會逐期回測：例如用 26/123 或之前嘅數據估 26/124，再對實際結果，同亂抽比較。</p>
     <p><b>提醒：</b>六合彩每期攪珠皆為獨立隨機事件，歷史統計與篩選條件僅助整理心水，不會提高中獎機率。博彩娛樂，量力而為。</p>
   </div>
 </div>
@@ -615,6 +677,8 @@ const TIER_RULE = ['中 6 個','中 5 個 + 特別號碼','中 5 個','中 4 個
 const FIXED_PRIZE = { 4: 9600, 5: 640, 6: 320, 7: 40 };
 const UNIT = 10;
 const MAX_COMBOS = 3003;
+const MAX_TICKETS_SINGLE = 1000;   // 單式 / AI 抽珠最多注數
+const MAX_GROUPS = 100;            // 複式 / 膽拖最多組數
 
 function getColor(num) {
   if (RED_NUMBERS.includes(num)) return 'red';
@@ -715,15 +779,23 @@ document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => setMode(
 function setMode(m) {
   mode = m;
   document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
-  document.querySelectorAll('.single-only').forEach(el => el.style.display = m === 'single' ? '' : 'none');
+  const singleLike = m === 'single' || m === 'ai';   // AI 抽珠出單式注項
+  document.querySelectorAll('.single-only').forEach(el => el.style.display = singleLike ? '' : 'none');
+  document.querySelectorAll('.ai-only').forEach(el => el.style.display = m === 'ai' ? '' : 'none');
   document.querySelectorAll('.banker-only').forEach(el => el.style.display = m === 'banker' ? '' : 'none');
   document.querySelectorAll('.multi-only').forEach(el => el.style.display = m === 'multiple' ? '' : 'none');
-  document.getElementById('numTicketsLabel').textContent = m === 'single' ? '產生注數'
-    : m === 'banker' ? '產生組數（每組一張膽拖）' : '產生組數（每組一張複式）';
+  document.querySelectorAll('.multi-banker').forEach(el => el.style.display = !singleLike ? '' : 'none');
+  document.getElementById('sumModeLabel').textContent = singleLike ? '和值篩選（6 碼總和）' : '和值篩選（平均和值）';
+  document.getElementById('numTicketsLabel').textContent = singleLike ? '產生注數'
+    : m === 'banker' ? '產生組數・每組一張膽拖' : '產生組數・每組一張複式';
+  // 注數上限：單式 / AI 1,000 注；複式、膽拖 100 組
+  document.getElementById('numTicketsLabel').textContent += singleLike ? '（最多 1,000）' : '（最多 100）';
   const nt = document.getElementById('numTickets');
-  if (m !== 'single' && +nt.value > 10) nt.value = 1;
-  if (m !== 'single' && +nt.value < 1) nt.value = 1;
-  document.getElementById('bankerHint').textContent = m === 'single'
+  nt.max = singleLike ? MAX_TICKETS_SINGLE : MAX_GROUPS;
+  if (+nt.value > +nt.max) nt.value = nt.max;
+  if (!singleLike && +nt.value < 1) nt.value = 1;
+  if (m === 'ai') renderAiPanel();
+  document.getElementById('bankerHint').textContent = singleLike
     ? '點選號碼作為每注都會出現的固定膽碼（最多 5 個）。'
     : m === 'banker'
     ? '點選指定膽碼；若少於設定膽數，不足部分由系統自動補齊。'
@@ -977,13 +1049,13 @@ let FULL_SUM_TABLE = null;
 const pctText = f => f > 0 && f < 0.0001 ? '<0.01%' : (f * 100).toFixed(2) + '%';
 function updateSumUI() {
   const m = document.getElementById('sumMode').value;
-  const single = mode === 'single';
-  document.querySelectorAll('.sum-exact').forEach(el => el.style.display = single && m === 'exact' ? '' : 'none');
-  document.querySelectorAll('.sum-range').forEach(el => el.style.display = single && m === 'range' ? '' : 'none');
-  document.querySelectorAll('.sum-group').forEach(el => el.style.display = single && m === 'group' ? '' : 'none');
-  document.querySelectorAll('.sum-panel').forEach(el => el.style.display = single && m !== 'any' ? '' : 'none');
+  const single = mode === 'single' || mode === 'ai', show = true;
+  document.querySelectorAll('.sum-exact').forEach(el => el.style.display = show && m === 'exact' ? '' : 'none');
+  document.querySelectorAll('.sum-range').forEach(el => el.style.display = show && m === 'range' ? '' : 'none');
+  document.querySelectorAll('.sum-group').forEach(el => el.style.display = show && m === 'group' ? '' : 'none');
+  document.querySelectorAll('.sum-panel').forEach(el => el.style.display = show && m !== 'any' ? '' : 'none');
   const info = document.getElementById('sumInfo');
-  if (m === 'any' || !single) { info.innerHTML = ''; return; }
+  if (m === 'any') { info.innerHTML = ''; return; }
   const { lo, hi } = getSumRange();
   if (isNaN(lo) || isNaN(hi) || lo < SUM_MIN || hi > SUM_MAX || lo > hi) {
     info.innerHTML = `<span class="nowin">和值需在 ${SUM_MIN}–${SUM_MAX} 之間</span>`; return;
@@ -991,7 +1063,8 @@ function updateSumUI() {
   if (!FULL_SUM_TABLE) FULL_SUM_TABLE = sumWaysTable(Array.from({ length: 49 }, (_, i) => i + 1), 6, SUM_MAX);
   const ways = countSumRange(FULL_SUM_TABLE, lo, hi);
   let h = 0; for (let x = lo; x <= hi; x++) h += HIST_SUM[x] || 0;
-  info.innerHTML = `共 <b>${ways.toLocaleString('en-US')}</b> 個組合（佔比 ${pctText(ways / 13983816)}）｜歷史開出 <b>${h}</b> 次（${(h / HIST_DRAWS * 100).toFixed(2)}%）`;
+  info.innerHTML = (single ? `共 <b>${ways.toLocaleString('en-US')}</b> 個組合（佔比 ${pctText(ways / 13983816)}）｜` : '') + `歷史開出 <b>${h}</b> 次（${(h / HIST_DRAWS * 100).toFixed(2)}%）` +
+    (single ? '' : `<br>📐 ${mode === 'multiple' ? '複式' : '膽拖'}號碼多過 6 個，所以用「平均和值」＝ 全部號碼總和 × 6 ÷ 號碼數目，同單式和值一樣喺 21–279 之間。例如 8 個號碼總和 200，平均和值就係 150。`);
 }
 function buildSumOptions() {
   const ex = document.getElementById('sumExact'), gr = document.getElementById('sumGroup');
@@ -1084,130 +1157,221 @@ function maxRun(nums) {
 }
 const zoneOf = n => Math.min(4, Math.floor(n / 10));
 function zoneCount(nums) { return new Set(nums.map(zoneOf)).size; }
+// 區段分佈（三種玩法通用）
+//   smart：最少 4 個區段（8 碼或以上要 5 個），連號最多 2 個（8 碼或以上最多 3 個）
+//   zones：1–9、10–19、20–29、30–39、40–49 五個區段都要有號碼
+function checkSpread(nums, spread, cfg) {
+  if (spread === 'any') return true;
+  const N = nums.length;
+  const poolZones = new Set(cfg.pool.map(zoneOf)).size;
+  if (spread === 'zones') return zoneCount(nums) >= Math.min(poolZones, 5);
+  if (zoneCount(nums) < Math.min(poolZones, N >= 8 ? 5 : 4)) return false;
+  return maxRun(nums) <= (N >= 8 ? 3 : 2);
+}
 function checkMultiFilters(nums, oe, bs, spread, cfg) {
   const N = nums.length;
   if (!ratioOk(nums.filter(x => x % 2).length, N, oe)) return false;
   if (!ratioOk(nums.filter(x => x >= 25).length, N, bs)) return false;
-  if (spread !== 'any') {
-    const poolZones = new Set(cfg.pool.map(zoneOf)).size;
-    const needZones = Math.min(poolZones, N >= 8 ? 5 : 4);
-    if (zoneCount(nums) < needZones) return false;
-    if (spread === 'smart' && maxRun(nums) > 3) return false;
-  }
-  return true;
+  return checkSpread(nums, spread, cfg);
 }
+// 和值：單式 = 6 碼總和；複式 / 膽拖 = 平均和值（總和 × 6 ÷ 號碼數，四捨五入）
+// 回傳全部 N 個號碼總和要落喺嘅範圍
+function sumTotalRange(lo, hi, N) {
+  if (N === 6) return { lo, hi };
+  return { lo: Math.ceil((lo - 0.5) * N / 6), hi: Math.ceil((hi + 0.5) * N / 6) - 1 };
+}
+const avgSum = nums => Math.round(nums.reduce((a, b) => a + b, 0) * 6 / nums.length);
 
-// ===== 複式：抽一組 =====
-function drawOneMultiple(shuffler, fixed, N, cfg, oe, bs, spread, maxAttempts = 3000) {
-  const need = N - fixed.length;
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const extra = shuffler.drawMany(need, fixed);
-    if (extra.length < need) { shuffler.returnBalls(extra); return null; }
-    const nums = [...fixed, ...extra].sort((a, b) => a - b);
-    if (hasColors(nums, cfg.required) && checkMultiFilters(nums, oe, bs, spread, cfg)) return { type: 'multiple', nums };
-    shuffler.returnBalls(extra);
-    if (attempt % 10 === 9) shuffler.reset();
-  }
-  return null;
-}
+// ===== 聰明組合：號碼循環不重複 =====
+// 每注照樣隨機抽，但抽過嘅號碼會擺埋一邊；要等號碼池（預設 49 碼）全部出過一次，先開始新一輪。
+// 其他條件（奇偶、大小、和值、顏色…）係附加喺上面；如果條件同循環有衝突，以條件優先。
 document.getElementById('multiCount').onchange = () => {
   const N = +document.getElementById('multiCount').value;
   if (mode === 'multiple' && selectedBankers.size > N - 1) alert(`你已點選 ${selectedBankers.size} 個心水號碼，${N} 個號碼的複式最多只可固定 ${N - 1} 個`);
 };
-
-// ===== 洗珠機 =====
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
 function rand() {
   if (window.crypto && crypto.getRandomValues) {
     const u = new Uint32Array(1); crypto.getRandomValues(u); return u[0] / 4294967296;
   }
   return Math.random();
 }
-class BallShuffler {
-  constructor(pool) { this.pool = [...pool]; this.bag = shuffle(this.pool); }
-  _drawOne() { if (this.bag.length === 0) this.bag = shuffle(this.pool); return this.bag.pop(); }
-  _putBack(balls) {
-    balls.forEach(ball => {
-      const idx = Math.floor(rand() * (this.bag.length + 1));
-      this.bag.splice(idx, 0, ball);
-    });
+function pickRandom(arr, m) {
+  const a = [...arr];
+  for (let i = 0; i < m; i++) {
+    const j = i + Math.floor(rand() * (a.length - i));
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  drawMany(n, exclude = []) {
-    const result = [], putBack = [];
-    let safety = 0;
-    while (result.length < n && safety < 400) {
-      const ball = this._drawOne();
-      if (exclude.includes(ball) || result.includes(ball)) putBack.push(ball);
-      else result.push(ball);
-      safety++;
-    }
-    this._putBack(putBack);
-    return result;
-  }
-  returnBalls(balls) { this._putBack(balls); }
-  reset() { this.bag = shuffle(this.pool); }
+  return a.slice(0, m);
 }
-
-function drawOneTicket(shuffler, bankers, cfg, oddEven, bigSmall, maxAttempts = 800) {
-  const needed = 6 - bankers.length;
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const extra = shuffler.drawMany(needed, bankers);
-    if (extra.length < needed) { shuffler.returnBalls(extra); return null; }
-    const picked = [...bankers, ...extra].sort((a, b) => a - b);
-    if (hasColors(picked, cfg.required) && checkFilters(picked, oddEven, bigSmall)) return picked;
-    shuffler.returnBalls(extra);
-    if (attempt % 10 === 9) shuffler.reset();
+class SmartCycle {
+  constructor(pool) {
+    this.pool = [...pool]; this.left = new Set(pool); this.round = 1;
+    this.used = 0;      // 由循環抽出嘅號碼總數
+    this.early = 0;     // 因條件限制而提早重複嘅號碼數
+    this.weights = null;  // AI 抽珠：每個號碼嘅偏好（null = 平均隨機）
+    this.noCycle = false; // AI 抽珠可以選擇唔用循環
   }
-  return null;
-}
-
-function drawOneBanker(shuffler, fixedBankers, bCount, legCount, cfg, maxAttempts = 800) {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const extraBankers = shuffler.drawMany(bCount - fixedBankers.length, fixedBankers);
-    const bankers = [...fixedBankers, ...extraBankers].sort((a, b) => a - b);
-    const legs = shuffler.drawMany(legCount, bankers).sort((a, b) => a - b);
-    if (bankers.length === bCount && legs.length === legCount && hasColors([...bankers, ...legs], cfg.required)) {
-      return { type: 'banker', bankers, legs };
+  drawWeighted(k, accept, sum, attempts) {
+    const W = this.weights;
+    const L = this.noCycle ? [...this.pool] : [...this.left];
+    const O = this.noCycle ? [] : this.pool.filter(x => !this.left.has(x));
+    const top = Math.min(k, L.length);
+    const pickW = (arr, m) => {
+      const a = [...arr], out = [];
+      for (let i = 0; i < m && a.length; i++) {
+        let tot = 0; a.forEach(x => tot += W[x]);
+        let r = rand() * tot, j = 0;
+        for (; j < a.length - 1; j++) { r -= W[a[j]]; if (r < 0) break; }
+        out.push(a.splice(j, 1)[0]);
+      }
+      return out;
+    };
+    const inSum = nums => { if (!sum) return true; const s = nums.reduce((a, b) => a + b, 0); return s >= sum.lo && s <= sum.hi; };
+    for (let m = top; m >= 0; m--) {
+      if (k - m > O.length) continue;
+      const forced = m === L.length && m < k;
+      const tries = m === top ? attempts * 2 : Math.ceil(attempts / 8);
+      for (let t = 0; t < tries; t++) {
+        const A = forced ? L : pickW(L, m), B = pickW(O, k - m), nums = [...A, ...B];
+        if (inSum(nums) && accept(nums)) return { nums, A, B };
+      }
     }
-    shuffler.returnBalls([...extraBankers, ...legs]);
-    if (attempt % 10 === 9) shuffler.reset();
+    return null;
   }
-  return null;
+  // k：今注要由循環抽幾多個；accept：其他條件；sum：{lo,hi} 和值限制（只計呢 k 個）
+  draw(k, accept, sum = null, attempts = 4000) {
+    if (k <= 0) return accept([]) ? { nums: [], A: [], B: [] } : null;
+    if (this.weights) return this.drawWeighted(k, accept, sum, attempts);
+    if (k > this.pool.length) return null;
+    const L = [...this.left], O = this.pool.filter(x => !this.left.has(x));
+    const top = Math.min(k, L.length);
+    // 先試全部用今輪剩低嘅號碼；做唔到（條件衝突）先逐步放寬
+    for (let m = top; m >= 0; m--) {
+      if (k - m > O.length) continue;
+      const forced = m === L.length && m < k;   // 今輪剩低唔夠：全部用晒，再由新一輪補
+      const tries = m === top ? attempts : Math.ceil(attempts / 8);
+      let tbL = null, tbO = null;
+      if (sum && sum.hi >= 0) {
+        if (m === k) tbL = sumWaysTable(L, k, sum.hi);
+        else tbO = sumWaysTable(O, k - m, sum.hi);
+      } else if (sum) return null;
+      for (let t = 0; t < tries; t++) {
+        let A, B;
+        if (m === k) {
+          A = sum ? sampleSumCombo(L, tbL, sum.lo, sum.hi) : pickRandom(L, k);
+          if (!A) break;
+          B = [];
+        } else {
+          A = forced ? L : pickRandom(L, m);
+          if (sum) {
+            const sa = A.reduce((a, b) => a + b, 0);
+            B = sampleSumCombo(O, tbO, sum.lo - sa, sum.hi - sa);
+            if (!B) { if (forced) break; continue; }
+          } else B = pickRandom(O, k - m);
+        }
+        const nums = [...A, ...B];
+        if (accept(nums)) return { nums, A, B };
+      }
+    }
+    return null;
+  }
+  // 確認採用呢注之後先至真正扣除號碼；回傳輪次標籤
+  commit(r) {
+    if (this.noCycle) { this.used += r.nums.length; return ''; }
+    const r0 = this.round;
+    let crossed = false;
+    this.used += r.nums.length;
+    r.A.forEach(x => this.left.delete(x));
+    if (!this.left.size) {
+      this.newRound(r.B); crossed = r.B.length > 0;
+    } else if (r.B.length) {
+      if (!r.A.length) { this.newRound(r.B); crossed = true; }   // 今輪剩低嘅號碼條件上用唔到，直接開新一輪
+      else this.early += r.B.length;
+    }
+    return crossed ? `第 ${r0}→${this.round} 輪` : `第 ${r0} 輪`;
+  }
+  newRound(already) {
+    this.round++;
+    this.left = new Set(this.pool.filter(x => !already.includes(x)));
+  }
+  summary() {
+    if (this.noCycle) return '🤖 冇用聰明組合：每注獨立按 AI 偏好抽，號碼可以重複';
+    const P = this.pool.length;
+    const done = this.pool.length - this.left.size;
+    let s = `🔁 聰明組合：每輪 ${P} 碼不重複，現正第 ${this.round} 輪（本輪已出 ${done}/${P}）`;
+    if (this.early) s += `<br><span class="nowin">⚠️ 因附加條件限制，有 ${this.early} 個號碼喺本輪完結前提早重複</span>`;
+    return s;
+  }
 }
 
 // ===== 主要產生函數 =====
+let lastCycleInfo = '';
 function generate() {
   const n = parseInt(document.getElementById('numTickets').value);
   const colorFilter = document.getElementById('colorFilter').value;
   const cfg = poolCfg(colorFilter);
   const bankersSel = Array.from(selectedBankers).sort((a, b) => a - b);
-  const maxN = mode === 'single' ? 100 : 10;
-  if (isNaN(n) || n < 1 || n > maxN) { alert(`${mode === 'single' ? '注數' : '組數'}必須在 1 至 ${maxN} 之間`); return; }
+  const singleLike = mode === 'single' || mode === 'ai';
+  const maxN = singleLike ? MAX_TICKETS_SINGLE : MAX_GROUPS;
+  if (isNaN(n) || n < 1 || n > maxN) { alert(`${singleLike ? '注數' : '組數'}必須在 1 至 ${maxN.toLocaleString('en-US')} 之間`); return; }
+  // 展開注數太多時先提一提（純粹玩 / 對獎都可以，但成本好高）
+  const perGroup = mode === 'multiple' ? nCr(+document.getElementById('multiCount').value || 6, 6)
+    : mode === 'banker' ? nCr(+document.getElementById('legCount').value || 0, 6 - +document.getElementById('bankerCount').value) : 1;
+  const bigTotal = n * perGroup;
+  if (bigTotal > 20000 && !confirm(`會展開 ${bigTotal.toLocaleString('en-US')} 注（成本 ${money(bigTotal * UNIT)}），可能要等幾秒，確定產生？`)) return;
+  let aiModel = null, aiNote = '';
+  if (mode === 'ai') {
+    if (!DRAWS.length) { alert('AI 抽珠需要雲端歷史資料，暫時未能使用'); return; }
+    const strat = document.getElementById('aiStrategy').value;
+    aiModel = buildAiModel(DRAWS.length, strat, aiRangeVal());
+    if (!aiModel) { alert('新攪珠機嘅資料未夠，請揀其他參考期數'); return; }
+    aiNote = `🤖 AI 估 ${escapeHtml(nextDrawLabel())} 期 · ${AI_STRAT_NAME[strat]} · 參考${aiRangeText(aiModel)}` +
+      (document.getElementById('aiPattern').value === 'on' ? ' · 跟常見形態' : '');
+  }
 
   const invalid = bankersSel.filter(b => !cfg.pool.includes(b));
   if (invalid.length) { alert(`膽碼 ${invalid.join(', ')} 不在所選顏色範圍內，請調整顏色或膽碼`); return; }
 
-  const shuffler = new BallShuffler(cfg.pool);
+  // 心水膽碼每注都會出現，所以唔計入循環
+  const cyc = new SmartCycle(cfg.pool.filter(x => !bankersSel.includes(x)));
   const entries = [];
   let fail = 0, dup = 0;
   const seen = new Set();
   const pushUnique = drawFn => {
     for (let t = 0; t < 50; t++) {
-      const e = drawFn();
-      if (!e) break;
-      const key = entryText(e);
-      if (!seen.has(key)) { seen.add(key); if (e.type !== 'banker') e.fixed = bankersSel; entries.push(e); return; }
+      const r = drawFn();
+      if (!r) break;
+      const key = entryText(r.entry);
+      if (!seen.has(key)) {
+        seen.add(key);
+        r.entry.round = cyc.commit(r.res);
+        if (r.entry.type !== 'banker') r.entry.fixed = bankersSel;
+        entries.push(r.entry); return;
+      }
       if (t === 49) { dup++; return; }
     }
     fail++;
   };
+
+  // ---- 三種玩法共用嘅附加條件 ----
+  const spreadSel = document.getElementById('multiSpread').value;
+  const sumOn = document.getElementById('sumMode').value !== 'any';
+  let sumLo = 0, sumHi = 0;
+  if (sumOn) {
+    ({ lo: sumLo, hi: sumHi } = getSumRange());
+    if (isNaN(sumLo) || isNaN(sumHi) || sumLo < SUM_MIN || sumHi > SUM_MAX || sumLo > sumHi) { alert(`和值需在 ${SUM_MIN}–${SUM_MAX} 之間`); return; }
+  }
+  const bSum = bankersSel.reduce((a, b) => a + b, 0);
+  const restPool = cfg.pool.filter(x => !bankersSel.includes(x));
+  // N：每注 / 每組總共幾多個號碼；k：要由循環抽幾多個
+  const makeSum = (N, k) => {
+    if (!sumOn) return null;
+    const r = sumTotalRange(sumLo, sumHi, N);
+    const s = { lo: r.lo - bSum, hi: r.hi - bSum };
+    if (s.hi < 0 || !countSumRange(sumWaysTable(restPool, k, Math.max(0, s.hi)), s.lo, s.hi)) return false;
+    return s;
+  };
+  const noSumMsg = '目前膽碼、顏色與號碼池條件下無符合此和值的組合，請放寬設定';
 
   if (mode === 'multiple') {
     const N = +document.getElementById('multiCount').value;
@@ -1215,46 +1379,57 @@ function generate() {
     if (bankersSel.length > N - 1) { alert(`已選 ${bankersSel.length} 個心水號碼，${N} 碼複式最多固定 ${N - 1} 個`); return; }
     const oe = document.getElementById('multiOddEven').value;
     const bs = document.getElementById('multiBigSmall').value;
-    const sp = document.getElementById('multiSpread').value;
-    for (let i = 0; i < n; i++) pushUnique(() => drawOneMultiple(shuffler, bankersSel, N, cfg, oe, bs, sp));
-  } else if (mode === 'single' && document.getElementById('sumMode').value !== 'any') {
-    const oddEven = document.getElementById('oddEvenFilter').value;
-    const bigSmall = document.getElementById('bigSmallFilter').value;
-    const { lo, hi } = getSumRange();
-    if (isNaN(lo) || isNaN(hi) || lo < SUM_MIN || hi > SUM_MAX || lo > hi) { alert(`和值需在 ${SUM_MIN}–${SUM_MAX} 之間`); return; }
-    const bSum = bankersSel.reduce((a, b) => a + b, 0);
-    const rest = cfg.pool.filter(x => !bankersSel.includes(x)).sort((a, b) => a - b);
-    const k = 6 - bankersSel.length;
-    const tb = sumWaysTable(rest, k, Math.max(0, hi - bSum));
-    if (hi - bSum < 0 || !countSumRange(tb, lo - bSum, hi - bSum)) {
-      alert('目前膽碼與顏色條件下無符合此和值的組合，請放寬設定'); return;
-    }
+    const k = N - bankersSel.length;
+    const sum = makeSum(N, k);
+    if (sum === false) { alert(noSumMsg); return; }
+    const accept = x => { const all = [...bankersSel, ...x]; return hasColors(all, cfg.required) && checkMultiFilters(all, oe, bs, spreadSel, cfg); };
     for (let i = 0; i < n; i++) pushUnique(() => {
-      for (let a = 0; a < 5000; a++) {
-        const extra = sampleSumCombo(rest, tb, lo - bSum, hi - bSum);
-        if (!extra) return null;
-        const picked = [...bankersSel, ...extra].sort((x, y) => x - y);
-        if (hasColors(picked, cfg.required) && checkFilters(picked, oddEven, bigSmall)) return { type: 'single', nums: picked };
-      }
-      return null;
+      const res = cyc.draw(k, accept, sum);
+      return res && { res, entry: { type: 'multiple', nums: [...bankersSel, ...res.nums].sort((a, b) => a - b) } };
     });
-  } else if (mode === 'single') {
+  } else if (singleLike) {
     const oddEven = document.getElementById('oddEvenFilter').value;
     const bigSmall = document.getElementById('bigSmallFilter').value;
+    const k = 6 - bankersSel.length;
+    const sum = makeSum(6, k);
+    if (sum === false) { alert(noSumMsg); return; }
+    const usePat = aiModel && document.getElementById('aiPattern').value === 'on';
+    if (aiModel) { cyc.weights = aiModel.w; cyc.noCycle = !document.getElementById('aiCycle').checked; }
+    const accept = x => { const all = [...bankersSel, ...x]; return hasColors(all, cfg.required) && checkFilters(all, oddEven, bigSmall) && checkSpread(all, spreadSel, cfg) && (!usePat || aiPatternOk(all, aiModel, sumOn)); };
     for (let i = 0; i < n; i++) pushUnique(() => {
-      const t = drawOneTicket(shuffler, bankersSel, cfg, oddEven, bigSmall);
-      return t ? { type: 'single', nums: t } : null;
+      const res = cyc.draw(k, accept, sum);
+      if (!res) return null;
+      const nums = [...bankersSel, ...res.nums].sort((a, b) => a - b);
+      const entry = { type: 'single', nums };
+      if (aiModel) entry.ai = aiTags(nums, aiModel);
+      return { res, entry };
     });
   } else {
     const bCount = +document.getElementById('bankerCount').value;
     const legCount = +document.getElementById('legCount').value;
     if (!legCount) { alert('所選範圍號碼不足，未能組成膽拖'); return; }
     if (bankersSel.length > bCount) { alert(`已選 ${bankersSel.length} 個膽碼，多於設定的 ${bCount} 膽`); return; }
-    for (let i = 0; i < n; i++) pushUnique(() => drawOneBanker(shuffler, bankersSel, bCount, legCount, cfg));
+    const oe = document.getElementById('multiOddEven').value;
+    const bs = document.getElementById('multiBigSmall').value;
+    const extraB = bCount - bankersSel.length;
+    const k = extraB + legCount;
+    const sum = makeSum(bCount + legCount, k);
+    if (sum === false) { alert(noSumMsg); return; }
+    // 膽拖嘅條件計晒「膽 + 腳」全部號碼
+    const accept = x => { const all = [...bankersSel, ...x]; return hasColors(all, cfg.required) && checkMultiFilters(all, oe, bs, spreadSel, cfg); };
+    for (let i = 0; i < n; i++) pushUnique(() => {
+      const res = cyc.draw(k, accept, sum);
+      if (!res) return null;
+      const autoB = pickRandom(res.nums, extraB);
+      const bankers = [...bankersSel, ...autoB].sort((a, b) => a - b);
+      const legs = res.nums.filter(x => !autoB.includes(x)).sort((a, b) => a - b);
+      return { res, entry: { type: 'banker', bankers, legs } };
+    });
   }
 
   if (!entries.length) { alert('無法產生符合條件的號碼組合，請放寬過濾條件'); return; }
   currentEntries = entries;
+  lastCycleInfo = (aiNote ? aiNote + '<br>' : '') + cyc.summary();
   try { localStorage.setItem('ms_last_entries', JSON.stringify(entries)); } catch (e) {}
   renderEntries(entries, fail, dup);
 }
@@ -1267,12 +1442,16 @@ function renderEntries(entries, fail = 0, dup = 0) {
   const totalBets = entries.reduce((s, e) => s + entryCount(e), 0);
   const unitName = { banker: '組膽拖', multiple: '組複式', single: '注' }[entries[0].type] || '注';
   let txt = `共 ${entries.length} ${unitName}（展開 ${totalBets} 注，成本 ${money(totalBets * UNIT)}）`;
-  if (entries[0].type === 'single' && document.getElementById('sumMode').value !== 'any') {
+  if (document.getElementById('sumMode').value !== 'any') {
     const { lo, hi } = getSumRange();
-    txt += `｜${lo === hi ? '和值 ' + lo : '和值 ' + lo + '–' + hi}`;
+    const nm = entries[0].type === 'single' ? '和值' : '平均和值';
+    txt += `｜${nm} ${lo === hi ? lo : lo + '–' + hi}`;
   }
+  const sp = document.getElementById('multiSpread').value;
+  if (sp !== 'any') txt += `｜${sp === 'zones' ? '五區段皆有' : '分散區段、少連號'}`;
   if (fail) txt += ` · ${fail} 項因條件限制略過`;
   if (dup) txt += ` · ${dup} 項因避免重複略過`;
+  if (lastCycleInfo) txt += '<br>' + lastCycleInfo;
   summary.innerHTML = txt;
   summary.style.display = 'block';
 
@@ -1281,6 +1460,8 @@ function renderEntries(entries, fail = 0, dup = 0) {
 
   entries.forEach((e, idx) => {
     const div = document.createElement('div');
+    const roundTag = (e.ai ? `<span class="gold">🤖 偏好 ${e.ai.pref.toFixed(2)}×</span><span>🔥${e.ai.hot} ❄️${e.ai.cold} 📈${e.ai.mom} 🔁${e.ai.last}</span>` : '') +
+      (e.round ? `<span>🔁 ${e.round}</span>` : '');
     div.className = 'result-ticket';
     const fixed = new Set(e.fixed || []);
     if (e.type === 'single') {
@@ -1293,7 +1474,7 @@ function renderEntries(entries, fail = 0, dup = 0) {
         <div class="balls">${nums.map(x => ballHtml(x, fixed.has(x) ? 'ball-banker' : '')).join('')}</div>
         <div class="ticket-stats">
           <span>和值 ${sum}</span><span>奇偶 ${odd}:${6 - odd}</span><span>大小 ${big}:${6 - big}</span>
-          <span>${colorStat(nums)}</span>
+          <span>${colorStat(nums)}</span><span>區段 ${zoneCount(nums)}/5</span>${roundTag}
         </div>`;
     } else if (e.type === 'multiple') {
       const nums = e.nums, N = nums.length;
@@ -1306,8 +1487,8 @@ function renderEntries(entries, fail = 0, dup = 0) {
         <div class="balls"><span class="tag-label">複式</span>${nums.map(x => ballHtml(x, fixed.has(x) ? 'ball-banker' : '')).join('')}</div>
         <div class="ticket-stats">
           <span>${N} 碼複式 · ${count.toLocaleString('en-US')} 注 (${money(count * UNIT)})</span>
-          <span>和值 ${sum}</span><span>奇偶 ${odd}:${N - odd}</span><span>大小 ${big}:${N - big}</span>
-          <span>${colorStat(nums)}</span><span>區段 ${zoneCount(nums)}/5</span>
+          <span>和值 ${sum}（平均 ${avgSum(nums)}）</span><span>奇偶 ${odd}:${N - odd}</span><span>大小 ${big}:${N - big}</span>
+          <span>${colorStat(nums)}</span><span>區段 ${zoneCount(nums)}/5</span>${roundTag}
         </div>
         <details><summary>展開全部 ${count.toLocaleString('en-US')} 注組合</summary><div class="combo-list"></div></details>`;
     } else {
@@ -1318,7 +1499,9 @@ function renderEntries(entries, fail = 0, dup = 0) {
           <span class="plus">拖</span>${e.legs.map(x => ballHtml(x)).join('')}</div>
         <div class="ticket-stats">
           <span>${e.bankers.length} 膽 ${e.legs.length} 腳 · ${count} 注 (${money(count * UNIT)})</span>
-          <span>${colorStat([...e.bankers, ...e.legs])}</span>
+          ${(() => { const all = [...e.bankers, ...e.legs], o = all.filter(x => x % 2).length, g = all.filter(x => x >= 25).length;
+            return `<span>平均和值 ${avgSum(all)}</span><span>奇偶 ${o}:${all.length - o}</span><span>大小 ${g}:${all.length - g}</span>`; })()}
+          <span>${colorStat([...e.bankers, ...e.legs])}</span><span>區段 ${zoneCount([...e.bankers, ...e.legs])}/5</span>${roundTag}
         </div>
         <details><summary>展開全部 ${count} 注組合</summary><div class="combo-list"></div></details>`;
     }
@@ -1739,8 +1922,12 @@ function downloadFile(content, filename, type) {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
-document.getElementById('exportTxtBtn').onclick = exportTxt;
-document.getElementById('exportCsvBtn').onclick = exportCsv;
+// 一次過下載 CSV（對獎用）同 TXT（俾人睇）；中間等一陣，手機瀏覽器先唔會擋第二個檔
+document.getElementById('exportBothBtn').onclick = () => {
+  if (!currentEntries.length) { alert('請先產生號碼'); return; }
+  exportCsv();
+  setTimeout(exportTxt, 800);
+};
 document.getElementById('generateBtn').onclick = generate;
 document.getElementById('clearBtn').onclick = () => {
   currentEntries = [];
@@ -1820,6 +2007,7 @@ async function loadDrawsCsv() {
   try {
     const res = await fetch('data/draws.csv?_=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
+    csvLastModified = res.headers.get('Last-Modified') || '';
     const list = [];
     (await res.text()).split(/\r?\n/).slice(1).forEach(line => {
       const c = line.split(',');
@@ -1841,13 +2029,64 @@ async function loadDrawsCsv() {
     refreshHistUI();
     st.innerHTML = `☁️ 已載入 2002 年至今共 <b>${DRAWS.length.toLocaleString('en-US')}</b> 期歷史數據（最新 ${escapeHtml(HIST_BASE_LABEL)}）`;
     renderStats();
+    loadDbStatus(last);
+    renderAiPanel();
   } catch (e) {
     st.innerHTML = `<span class="nowin">未連接雲端歷史庫（${escapeHtml(e.message)}）</span> · 需部署於伺服器並附帶 data/draws.csv 方可使用統計分析。`;
     document.getElementById('poolHotBtn').disabled = true;
+    setDbStatus('err', `⚠️ 未能連接資料庫（${escapeHtml(e.message)}）· 目前使用內置資料，截至 ${escapeHtml(HIST_BASE_LABEL)}`);
   }
 }
+
+// ===== 資料庫狀態列 =====
+let csvLastModified = '';
+const fmtHK = t => {
+  const d = new Date(t);
+  if (isNaN(d)) return '';
+  return d.toLocaleString('zh-HK', { timeZone: 'Asia/Hong_Kong', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+};
+const agoText = t => {
+  const m = Math.round((Date.now() - new Date(t).getTime()) / 60000);
+  if (isNaN(m)) return '';
+  if (m < 1) return '剛剛';
+  if (m < 60) return `${m} 分鐘前`;
+  if (m < 48 * 60) return `${Math.round(m / 60)} 小時前`;
+  return `${Math.round(m / 1440)} 日前`;
+};
+function setDbStatus(level, html) {
+  const box = document.getElementById('dbStatus');
+  box.className = 'db-status ' + level;
+  document.getElementById('dbStatusText').innerHTML = html;
+}
+async function loadDbStatus(last) {
+  const drawTxt = `最新一期 <b>${escapeHtml(last.id)}</b>${last.date ? '（' + escapeHtml(last.date) + '）' : ''}`;
+  let meta = null;
+  try {
+    const r = await fetch('data/meta.json?_=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) meta = await r.json();
+  } catch (e) {}
+  if (meta && meta.checkedAt) {
+    const hrs = (Date.now() - new Date(meta.checkedAt).getTime()) / 3600000;
+    // 系統每晚檢查兩次；超過 30 小時冇檢查代表自動更新可能停咗
+    const level = meta.ok === false ? 'err' : hrs > 30 ? 'warn' : 'ok';
+    let html = `${drawTxt} · 資料更新於 <b>${fmtHK(meta.updatedAt)}</b><br>` +
+      `系統最後檢查：${fmtHK(meta.checkedAt)}（${agoText(meta.checkedAt)}）`;
+    if (meta.ok === false) html += ` · <span class="nowin">上次檢查未能連線，資料可能未更新</span>`;
+    else if (hrs > 30) html += ` · <span class="nowin">超過 30 小時未有檢查，自動更新可能已停止</span>`;
+    setDbStatus(level, html);
+  } else {
+    // 未有 meta.json（例如舊版更新程式）：用檔案修改時間代替
+    const lm = csvLastModified ? `資料更新於 <b>${fmtHK(csvLastModified)}</b>（${agoText(csvLastModified)}）` : '更新時間不詳';
+    setDbStatus('warn', `${drawTxt} · ${lm}`);
+  }
+}
+// 馬會第五代攪珠機由 2026-05-05 晚開始使用（第四代喺 2026-05-02 50 周年金多寶後退役）
+const NEW_MACHINE_DATE = '2026-05-05';
+const isNewMachine = d => !!d.date && d.date >= NEW_MACHINE_DATE;
+const aiRangeVal = () => { const v = document.getElementById('aiRange').value; return v === 'newmc' ? v : +v; };
 function statRangeDraws() {
   const v = document.getElementById('statRange').value;
+  if (v === 'newmc') return DRAWS.filter(isNewMachine);
   return v === 'all' ? DRAWS : DRAWS.slice(-(+v));
 }
 
@@ -2019,6 +2258,122 @@ document.getElementById('btUseCurrentBtn').onclick = () => {
   document.getElementById('btInput').value = entries.map(entryText).join('\n');
 };
 
+// ===== 🤖 AI 抽珠：按最近攪珠趨勢加權 =====
+// 做法：用「某一期之前」嘅攪珠結果，計每個號碼嘅偏好程度（熱門、近期走勢、遺漏、上期延續），
+// 偏好高嘅號碼較易被抽中，但每個號碼都仍然有機會。
+// 「AI 準唔準？」會用同一方法逐期回測：用第 N 期之前嘅數據估第 N 期，再同實際結果比較。
+const AI_STRAT_NAME = { mix: '綜合趨勢', hot: '追熱門', cold: '追遺漏回補', momentum: '近期走勢', follow: '延續上期' };
+function buildAiModel(end, strategy, R) {
+  // end：只用 DRAWS[0 .. end-1]（即係估第 end 期）
+  if (end < 20) return null;
+  const isNew = R === 'newmc';
+  const hist = DRAWS.slice(0, end), rec = hist.slice(-10), lastD = hist[hist.length - 1];
+  const newHist = isNew ? hist.filter(isNewMachine) : [];
+  const r = isNew ? newHist : hist.slice(-R);
+  if (isNew && r.length < 5) return null;   // 新機開出未夠 5 期，唔夠數據
+  const cnt = Array(50).fill(0), rc = Array(50).fill(0), gap = Array(50).fill(60);
+  r.forEach(d => d.n.forEach(x => cnt[x]++));
+  rec.forEach(d => d.n.forEach(x => rc[x]++));
+  for (let i = hist.length - 1, k = 0; i >= 0 && k < 60; i--, k++) hist[i].n.forEach(x => { if (gap[x] === 60) gap[x] = k; });
+  const lastSet = new Set(lastD.n);
+  const raw = Array(50).fill(0);
+  for (let x = 1; x <= 49; x++) {
+    const hot = (cnt[x] + 1) / (r.length * 6 / 49 + 1);
+    const cold = (Math.min(gap[x], 40) + 1) / (49 / 6);
+    const mom = (rc[x] + 0.5) / (10 * 6 / 49 + 0.5);
+    const fol = lastSet.has(x) ? 1.8 : (lastSet.has(x - 1) || lastSet.has(x + 1)) ? 1.4 : 1;
+    raw[x] = strategy === 'hot' ? hot : strategy === 'cold' ? cold : strategy === 'momentum' ? mom : strategy === 'follow' ? fol
+      : Math.pow(hot, 0.4) * Math.pow(mom, 0.3) * Math.pow(cold, 0.15) * Math.pow(fol, 0.15);
+  }
+  let w = raw.map((v, i) => i ? Math.pow(v, 1.3) : 0);
+  const mean = w.slice(1).reduce((a, b) => a + b, 0) / 49;
+  w = w.map((v, i) => i ? Math.max(0.3, Math.min(3, v / mean)) : 0);
+  // 常見形態：用最近（最少 200 期）嘅奇偶、大小、和值分佈
+  // 新機模式：新機有 30 期以上就只用新機數據計形態，否則用最近 200 期
+  const pat = isNew ? (newHist.length >= 30 ? newHist : hist.slice(-200)) : hist.slice(-Math.max(R, 200));
+  const cover = arr => { const f = Array(7).fill(0); arr.forEach(v => f[v]++); const order = [0, 1, 2, 3, 4, 5, 6].sort((a, b) => f[b] - f[a]); const set = new Set(); let c = 0; for (const k of order) { set.add(k); c += f[k]; if (c >= arr.length * 0.8) break; } return { set, pct: c / arr.length }; };
+  const odd = cover(pat.map(d => d.n.filter(x => x % 2).length));
+  const big = cover(pat.map(d => d.n.filter(x => x >= 25).length));
+  const sums = pat.map(d => d.n.reduce((a, b) => a + b, 0)).sort((a, b) => a - b);
+  const sumLo = sums[Math.floor(sums.length * 0.1)], sumHi = sums[Math.floor(sums.length * 0.9)];
+  const rank = Array.from({ length: 49 }, (_, i) => i + 1).sort((a, b) => w[b] - w[a] || a - b);
+  const hotTop = new Set(Array.from({ length: 49 }, (_, i) => i + 1).sort((a, b) => cnt[b] - cnt[a] || a - b).slice(0, 10));
+  return { w, cnt, gap, rc, lastSet, hotTop, rank, odd, big, sumLo, sumHi, R: r.length, end, strategy, isNew,
+    patN: pat.length, patNew: isNew && newHist.length >= 30 };
+}
+const aiRangeText = m => m.isNew ? `新攪珠機至今 ${m.R} 期` : `最近 ${m.R} 期`;
+function aiTags(nums, m) {
+  const t = { hot: 0, cold: 0, mom: 0, last: 0 };
+  nums.forEach(x => { if (m.hotTop.has(x)) t.hot++; if (m.gap[x] >= 15) t.cold++; if (m.rc[x] >= 2) t.mom++; if (m.lastSet.has(x)) t.last++; });
+  const pref = nums.reduce((a, x) => a + m.w[x], 0) / nums.length;
+  return { pref, ...t };
+}
+function aiPatternOk(nums, m, userSum) {
+  if (!m.odd.set.has(nums.filter(x => x % 2).length)) return false;
+  if (!m.big.set.has(nums.filter(x => x >= 25).length)) return false;
+  if (!userSum) { const s = nums.reduce((a, b) => a + b, 0); if (s < m.sumLo || s > m.sumHi) return false; }
+  return true;
+}
+const nextDrawLabel = () => DRAWS.length ? keyLabel(drawKey(DRAWS[DRAWS.length - 1].id) + 1) : '下一期';
+const aiSetText = set => { const a = [...set].sort((x, y) => x - y); return a.length > 1 && a[a.length - 1] - a[0] === a.length - 1 ? `${a[0]}–${a[a.length - 1]}` : a.join('、'); };
+function renderAiPanel() {
+  const box = document.getElementById('aiInsight');
+  if (!box || mode !== 'ai') return;
+  if (!DRAWS.length) { box.innerHTML = '<span class="nowin">AI 抽珠需要雲端歷史資料（data/draws.csv），載入後先用得。</span>'; return; }
+  const strat = document.getElementById('aiStrategy').value, R = aiRangeVal();
+  const m = buildAiModel(DRAWS.length, strat, R);
+  if (!m) { box.innerHTML = '<span class="nowin">新攪珠機（2026-05-05 起）嘅資料未夠 5 期，或者資料庫冇日期，暫時未能用呢個選項。</span>'; return; }
+  const last = DRAWS[DRAWS.length - 1];
+  const tag = x => [m.hotTop.has(x) ? '🔥' : '', m.gap[x] >= 15 ? '❄️' : '', m.rc[x] >= 2 ? '📈' : '', m.lastSet.has(x) ? '🔁' : ''].join('');
+  box.innerHTML = `
+    <div class="hint">🤖 用 <b>${escapeHtml(last.id)}</b> 或之前「${aiRangeText(m)}」估 <b>${escapeHtml(nextDrawLabel())}</b> 期 · 策略：${AI_STRAT_NAME[strat]}</div>
+    <div class="sub-h">AI 最偏好嘅 12 個號碼</div>
+    <div class="balls">${m.rank.slice(0, 12).map(x => `<span style="display:inline-flex;flex-direction:column;align-items:center;font-size:.68rem;color:var(--muted);">${ballHtml(x, 'sm')}${m.w[x].toFixed(1)}× ${tag(x)}</span>`).join('')}</div>
+    <div class="hint" style="margin-top:6px;">🔥 熱門（${aiRangeText(m)}出得最多 10 個）· ❄️ 遺漏 15 期或以上 · 📈 最近 10 期出咗 2 次或以上 · 🔁 上期開出</div>
+    <div class="hint" style="margin-top:6px;">📐 常見形態（${m.patNew ? '新攪珠機' : '最近'} ${m.patN} 期）：奇數 ${aiSetText(m.odd.set)} 個（佔 ${(m.odd.pct * 100).toFixed(0)}%）· 大數 ${aiSetText(m.big.set)} 個（佔 ${(m.big.pct * 100).toFixed(0)}%）· 和值 ${m.sumLo}–${m.sumHi}（佔 80%）</div>
+    <div class="row-inline" style="margin-top:10px;">
+      <button class="btn btn-secondary btn-small" id="aiBtBtn">🧪 AI 準唔準？逐期測試</button>
+    </div>
+    <div id="aiBtResult" style="margin-top:8px;"></div>`;
+  document.getElementById('aiBtBtn').onclick = runAiBacktest;
+}
+// 逐期回測：用第 t 期之前嘅數據，揀 AI 最偏好嘅 6 個號碼，對第 t 期
+function runAiBacktest() {
+  const out = document.getElementById('aiBtResult');
+  const strat = document.getElementById('aiStrategy').value, R = aiRangeVal();
+  // 新機模式：只測新機開出第 6 期起（之前數據唔夠）
+  let start = DRAWS.length - Math.min(100, DRAWS.length - 30);
+  if (R === 'newmc') { const first = DRAWS.findIndex(isNewMachine); start = first < 0 ? DRAWS.length : Math.max(start, first + 5); }
+  const dist = Array(7).fill(0), rows = [];
+  let total = 0, N = 0;
+  for (let t = start; t < DRAWS.length; t++) {
+    const m = buildAiModel(t, strat, R);
+    if (!m) continue;
+    N++;
+    const guess = m.rank.slice(0, 6).sort((a, b) => a - b);
+    const d = DRAWS[t], hit = guess.filter(x => d.n.includes(x));
+    dist[hit.length]++; total += hit.length;
+    rows.push({ prev: DRAWS[t - 1].id, d, guess, hit });
+  }
+  if (N < 5) { out.innerHTML = '<span class="nowin">可以測試嘅期數不足</span>'; return; }
+  const avg = total / N, rnd = 36 / 49;
+  // 亂抽 6 個號碼，中 k 個嘅理論機率
+  const th = k => nCr(6, k) * nCr(43, 6 - k) / nCr(49, 6);
+  const verdict = avg > rnd * 1.15 ? '比亂抽略高，但 ${N} 期樣本好細，好大機會只係運氣' : avg < rnd * 0.85 ? '仲差過亂抽' : '同亂抽差唔多';
+  out.innerHTML = `
+    <div class="summary-bar" style="margin-bottom:8px;">${R === 'newmc' ? '新攪珠機' : '最近'} ${N} 期，AI 每期估 6 個號碼：平均中 <b>${avg.toFixed(2)}</b> 個 ｜ 亂抽理論平均 <b>${rnd.toFixed(2)}</b> 個<br>結論：${verdict}。</div>
+    <table class="prize"><tr><th>中幾多個</th><th>AI（期數）</th><th>AI 比例</th><th>亂抽理論</th></tr>
+      ${[0, 1, 2, 3, 4, 5, 6].filter(k => k <= 4 || dist[k]).map(k => `<tr><td>中 ${k} 個</td><td>${dist[k]}</td><td>${(dist[k] / N * 100).toFixed(1)}%</td><td>${(th(k) * 100).toFixed(k >= 3 ? 2 : 1)}%</td></tr>`).join('')}
+    </table>
+    <div class="sub-h">最近 5 期例子</div>
+    ${rows.slice(-5).reverse().map(x => `<div class="result-ticket" style="padding:8px;">
+      <div class="hint" style="width:100%;">用 ${escapeHtml(x.prev)} 或之前估 <b>${escapeHtml(x.d.id)}</b>：中 <b>${x.hit.length}</b> 個</div>
+      <div class="balls"><span class="hint" style="min-width:30px;">估</span>${x.guess.map(n => ballHtml(n, 'sm ' + (x.d.n.includes(n) ? 'hit' : 'miss'))).join('')}</div>
+      <div class="balls"><span class="hint" style="min-width:30px;">實際</span>${x.d.n.map(n => ballHtml(n, 'sm')).join('')}<span class="plus">+</span>${ballHtml(x.d.sp, 'sm')}</div>
+    </div>`).join('')}`;
+}
+['aiStrategy', 'aiRange'].forEach(id => document.getElementById(id).addEventListener('change', renderAiPanel));
+
 // ===== 初始化 =====
 initBankerSection();
 buildLegOptions();
@@ -2038,4 +2393,3 @@ try {
 </script>
 </body>
 </html>
-
